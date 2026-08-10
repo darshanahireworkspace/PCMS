@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+.env.*
+!.env.example
+
+# Temporary uploads
+uploads/*
+!uploads/.gitkeep
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
