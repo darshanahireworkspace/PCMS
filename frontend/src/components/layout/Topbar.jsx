@@ -1,7 +1,8 @@
-import { Menu, Languages, Shield, Activity } from "lucide-react";
+import { Menu, Languages, Shield, Activity, ShieldCheck } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
+import { isSuperAdminUser } from "../../utils/authUtils";
 import policeLogo from "../../assets/police-logo.png";
 
 const getPageMeta = (pathname) => {
@@ -49,6 +50,7 @@ function Topbar({ setSidebarOpen }) {
   const location = useLocation();
   const { officer } = useAuth();
   const pageMeta = getPageMeta(location.pathname);
+  const isSuperAdmin = isSuperAdminUser(officer);
 
   return (
     <header className="topbar">
@@ -73,10 +75,17 @@ function Topbar({ setSidebarOpen }) {
       </div>
 
       <div className="topbar-right">
-        <div className="topbar-status-chip">
-          <Activity size={12} className="pulse-dot" />
-          <span>Live Database</span>
-        </div>
+        {isSuperAdmin ? (
+          <div className="topbar-status-chip global-admin">
+            <ShieldCheck size={14} className="text-teal" />
+            <span>Super Admin • Global View</span>
+          </div>
+        ) : (
+          <div className="topbar-status-chip">
+            <Activity size={12} className="pulse-dot" />
+            <span>Live Database</span>
+          </div>
+        )}
 
         <div className="language-selector-chip">
           <Languages size={15} />
@@ -96,7 +105,9 @@ function Topbar({ setSidebarOpen }) {
           </div>
           <div className="topbar-user-details">
             <span className="topbar-user-name">{officer?.full_name || "Officer"}</span>
-            <span className="topbar-user-station">{officer?.police_station || "Chhavani PS"}</span>
+            <span className="topbar-user-station">
+              {isSuperAdmin ? "Global Data Access" : (officer?.police_station || "Chhavani PS")}
+            </span>
           </div>
         </div>
       </div>

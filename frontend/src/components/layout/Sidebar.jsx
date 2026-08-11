@@ -18,10 +18,13 @@ import { useTranslation } from "react-i18next";
 import useAuth from "../../hooks/useAuth";
 import policeLogo from "../../assets/police-logo.png";
 
+import { isSuperAdminUser } from "../../utils/authUtils";
+
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { officer, logout } = useAuth();
+  const isSuperAdmin = isSuperAdminUser(officer);
 
   return (
     <aside className={`sidebar ${sidebarOpen ? "show-sidebar" : ""}`}>
@@ -131,7 +134,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           </div>
           <div className="officer-info">
             <b className="officer-name">{officer?.full_name || "Police Officer"}</b>
-            <span className="officer-role">{officer?.role || "Duty Officer"}</span>
+            <span className="officer-role">
+              {isSuperAdmin ? "Super Admin • Global View" : (officer?.role || "Duty Officer")}
+            </span>
           </div>
         </div>
 
