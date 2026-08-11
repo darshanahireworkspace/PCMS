@@ -212,17 +212,32 @@ function AdminLayout() {
               <span>Back to Command App</span>
             </NavLink>
           </div>
+        </nav>
+
+        {/* SIDEBAR COMMAND FOOTER & LOGOUT */}
+        <div className="admin-sidebar-footer">
+          <div className="admin-footer-user-box">
+            <div className="admin-footer-avatar">
+              {(adminUser?.full_name || "S").charAt(0).toUpperCase()}
+            </div>
+            <div className="admin-footer-user-meta">
+              <span className="admin-footer-name">
+                {adminUser?.full_name || "Super Admin"}
+              </span>
+              <span className="admin-footer-role">Superintendent Command</span>
+            </div>
+          </div>
 
           <button
             type="button"
-            className="admin-nav-item logout-btn"
+            className="admin-sidebar-logout-btn"
             onClick={handleLogout}
-            style={{ marginTop: "auto" }}
+            title="Sign out of Admin Console"
           >
-            <LogOut size={18} />
+            <LogOut size={16} />
             <span>Sign Out</span>
           </button>
-        </nav>
+        </div>
       </aside>
 
       {/* MAIN CONTENT WRAPPER */}

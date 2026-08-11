@@ -209,44 +209,49 @@
 }
 
 .admin-sidebar {
-  width: 260px;
-  background: #0b1528;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  width: 270px;
+  background: linear-gradient(180deg, #091322 0%, #0b172a 100%);
+  border-right: 1px solid rgba(56, 189, 248, 0.12);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   transition: transform 0.25s ease;
   z-index: 100;
+  box-shadow: 4px 0 25px rgba(0, 0, 0, 0.4);
 }
 
 .admin-sidebar-header {
-  padding: 20px 24px;
+  padding: 20px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.5);
 }
 
 .admin-sidebar-logo {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(56, 189, 248, 0.3));
 }
 
 .admin-sidebar-header h3 {
   font-size: 16px;
   font-weight: 800;
-  color: #ffffff;
+  color: #f8fafc;
   margin: 0;
   line-height: 1.2;
+  letter-spacing: -0.01em;
 }
 
 .admin-sidebar-header p {
   font-size: 11px;
   color: #38bdf8;
   margin: 2px 0 0 0;
-  font-weight: 600;
-  letter-spacing: 0.03em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .admin-sidebar-nav {
@@ -268,45 +273,128 @@
   font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid transparent;
+  position: relative;
 }
 
 .admin-nav-item:hover {
   color: #f8fafc;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(3px);
 }
 
 .admin-nav-item.active {
   color: #38bdf8;
-  background: rgba(56, 189, 248, 0.12);
-  border-color: rgba(56, 189, 248, 0.25);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.15) 0%, rgba(56, 189, 248, 0.03) 100%);
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.1);
+}
+
+.admin-nav-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 15%;
+  bottom: 15%;
+  width: 3.5px;
+  background: #38bdf8;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 0 8px #38bdf8;
 }
 
 .admin-nav-item.command-link {
-  color: #a855f7;
-  margin-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 14px;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.08);
+  border: 1px dashed rgba(168, 85, 247, 0.3);
+  margin-top: 4px;
 }
 
 .admin-nav-item.command-link:hover {
-  background: rgba(168, 85, 247, 0.12);
-  color: #c084fc;
+  background: rgba(168, 85, 247, 0.18);
+  color: #ffffff;
+  border-color: rgba(168, 85, 247, 0.5);
 }
 
-.admin-nav-item.logout-btn {
-  color: #f87171;
-  background: transparent;
+/* SIDEBAR FOOTER & PROMINENT LOGOUT BUTTON */
+.admin-sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 13, 25, 0.8);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-footer-user-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+
+.admin-footer-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.admin-footer-user-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-footer-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-footer-role {
+  font-size: 11px;
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+.admin-sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
-  border: none;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(185, 28, 28, 0.2) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  text-align: left;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
 }
 
-.admin-nav-item.logout-btn:hover {
-  background: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
+.admin-sidebar-logout-btn:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+  transform: translateY(-1px);
 }
 
 .admin-main-container {
