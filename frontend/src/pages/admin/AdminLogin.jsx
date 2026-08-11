@@ -11,18 +11,23 @@ import {
   Smartphone,
   X,
   Share,
+  Sun,
+  Moon,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { loginOfficer } from "../../api/authApi";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import policeLogo from "../../assets/police-logo.png";
-import "./AdminPortal.css";
+import "./admin-login.css";
 
 function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("admin_theme") || "dark";
+  });
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showIosModal, setShowIosModal] = useState(false);
@@ -35,6 +40,12 @@ function AdminLogin() {
     typeof navigator !== "undefined" &&
     (/iphone|ipad|ipod/i.test(navigator.userAgent) ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    localStorage.setItem("admin_theme", nextTheme);
+  };
 
   // Listen to beforeinstallprompt for Android & Desktop Chrome/Edge
   useEffect(() => {
@@ -80,7 +91,7 @@ function AdminLogin() {
 
   const handleInstallApp = async () => {
     if (isInstalled) {
-      toast.success("Chhavani Police Admin App आधीच इन्स्टॉल आहे.");
+      toast.success("Chhavani Police Admin App is already installed");
       return;
     }
 
@@ -93,12 +104,12 @@ function AdminLogin() {
       deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
       if (choice.outcome === "accepted") {
-        toast.success("Chhavani Police Admin App यशस्वीरित्या इन्स्टॉल झाले!");
+        toast.success("Chhavani Police Admin App installed successfully!");
         setDeferredPrompt(null);
         setIsInstalled(true);
       }
     } else {
-      toast("ब्राऊझर मेनू (⋮) वर जा आणि 'Install App' किंवा 'Add to Home screen' निवडा.", {
+      toast("Open browser menu (⋮) and select 'Add to Home screen' or 'Install App'", {
         icon: "📲",
       });
     }
@@ -132,7 +143,7 @@ function AdminLogin() {
       const errMsg =
         err.response?.data?.message ||
         err.response?.data?.error ||
-        "Invalid administrator credentials";
+        "Invalid username or password.";
       toast.error(errMsg);
     } finally {
       setLoading(false);
@@ -140,87 +151,127 @@ function AdminLogin() {
   };
 
   return (
-    <div className="admin-portal-stage">
-      <div className="admin-portal-card">
-        <div className="admin-portal-header">
-          <div className="admin-portal-logo">
-            <img src={policeLogo} alt="Maharashtra Police Logo" />
+    <div className={`admin-login-wrapper theme-${theme}`}>
+      <div className="admin-login-stage-box">
+        {/* LEFT BRAND PANEL (DESKTOP / LAPTOP) */}
+        <div className="admin-login-brand-panel">
+          <div className="admin-brand-header">
+            <div className="admin-brand-logo-ring">
+              <img src={policeLogo} alt="Maharashtra Police Emblem" />
+            </div>
+            <div className="admin-brand-titles">
+              <h1>Chhavani Police</h1>
+              <p>Super Admin Console</p>
+            </div>
           </div>
-          <h2>मालेगाव शहर पोलीस व्यवस्थापन</h2>
-          <p>सुपर ॲडमिन पोर्टल • Malegaon City Police Console</p>
 
-          {!isInstalled && (
-            <button
-              type="button"
-              className="admin-pwa-install-btn mt-3"
-              onClick={handleInstallApp}
-            >
-              <Download size={15} />
-              <span>Install Admin App (ॲप इन्स्टॉल करा)</span>
-            </button>
-          )}
+          <p className="admin-brand-desc">
+            Secure city-wide police administration, officer credential deployment, squad team sharing, and real-time security intelligence console.
+          </p>
+
+          <div className="admin-brand-footer">
+            <div className="admin-security-pill">
+              <ShieldCheck size={14} />
+              <span>Encrypted Authority Session</span>
+            </div>
+            <span className="admin-brand-copyright">
+              © 2026 Maharashtra Police • All Rights Reserved
+            </span>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="admin-portal-form" autoComplete="off">
-          <div className="admin-portal-group">
-            <label htmlFor="admin-username">Admin Username</label>
-            <div className="admin-portal-input-wrapper">
-              <User size={18} className="field-icon" />
-              <input
-                id="admin-username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. SPMalegaon"
-                autoComplete="off"
-                required
-              />
+        {/* RIGHT FORM PANEL (DESKTOP & MOBILE FORM) */}
+        <div className="admin-login-card-panel">
+          <div className="admin-card-header-bar">
+            <div className="admin-card-titles">
+              <h2>Welcome Back</h2>
+              <p>Sign in to the Super Admin Console</p>
             </div>
+
+            {/* LIGHT / DARK MODE TOGGLE */}
+            <button
+              type="button"
+              className="admin-theme-toggle-btn"
+              onClick={toggleTheme}
+              title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+              aria-label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+            >
+              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
           </div>
 
-          <div className="admin-portal-group">
-            <label htmlFor="admin-password">Master Password</label>
-            <div className="admin-portal-input-wrapper">
-              <Lock size={18} className="field-icon" />
-              <input
-                id="admin-password"
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password..."
-                autoComplete="off"
-                required
-              />
+          <form onSubmit={handleSubmit} className="admin-login-form" autoComplete="off">
+            <div className="admin-login-field-group">
+              <label htmlFor="admin-username">Username</label>
+              <div className="admin-input-icon-wrapper">
+                <User size={18} className="field-icon" />
+                <input
+                  id="admin-username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your admin username"
+                  autoComplete="username"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="admin-login-field-group">
+              <label htmlFor="admin-password">Password</label>
+              <div className="admin-input-icon-wrapper">
+                <Lock size={18} className="field-icon" />
+                <input
+                  id="admin-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="admin-password-toggle-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="admin-login-submit-btn"
+              disabled={loading}
+            >
+              {loading ? (
+                "Signing in..."
+              ) : (
+                <>
+                  <ShieldCheck size={18} />
+                  <span>Sign In to Admin Console</span>
+                  <ArrowRight size={16} />
+                </>
+              )}
+            </button>
+
+            {!isInstalled && (
               <button
                 type="button"
-                className="admin-portal-eye-btn"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="admin-login-pwa-btn"
+                onClick={handleInstallApp}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                <Download size={15} />
+                <span>Install Admin App</span>
               </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="admin-portal-submit-btn"
-            disabled={loading}
-          >
-            {loading ? (
-              "Authenticating..."
-            ) : (
-              <>
-                <ShieldCheck size={18} />
-                Sign In to Admin Console
-                <ArrowRight size={16} />
-              </>
             )}
-          </button>
-        </form>
+          </form>
 
-        <div className="admin-portal-footer">
-          <p>मालेगाव पोलीस मुख्यालय • Maharashtra Police Authority Console</p>
+          <div className="admin-card-footer">
+            <p>Chhavani Police Headquarters • Authority Portal</p>
+          </div>
         </div>
       </div>
 
