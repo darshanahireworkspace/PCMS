@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Settings as SettingsIcon,
   User,
-  Shield,
   Bell,
   Languages,
   Moon,
@@ -20,6 +20,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Zap,
+  LogOut,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
@@ -42,7 +43,8 @@ const DEFAULT_SETTINGS = {
 };
 
 function Settings() {
-  const { officer } = useAuth();
+  const { officer, logout } = useAuth();
+  const navigate = useNavigate();
   const { i18n } = useTranslation();
   const {
     locationStatus,
@@ -61,6 +63,7 @@ function Settings() {
 
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showIosGuide, setShowIosGuide] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     applyTheme(settings.themeMode);
@@ -108,6 +111,13 @@ function Settings() {
     e.preventDefault();
     localStorage.setItem("policeAppSettings", JSON.stringify(settings));
     toast.success("Settings saved successfully");
+  };
+
+  const handleConfirmLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    setShowLogoutModal(false);
+    navigate("/", { replace: true });
   };
 
   const handleInstallApp = async () => {
@@ -166,7 +176,7 @@ function Settings() {
   };
 
   return (
-    <div className="settings-v2-container">
+    <div className="settings-v2-container mb-12">
       <div className="page-header">
         <div>
           <h2 className="page-title">System Settings & Device Permissions</h2>
@@ -503,7 +513,34 @@ function Settings() {
             </div>
           </section>
 
-          <div className="form-actions">
+          {/* OFFICER LOGOUT SECTION */}
+          <section className="form-section settings-logout-card">
+            <div className="section-title text-rose">
+              <LogOut size={20} style={{ color: "#ef4444" }} />
+              <div>
+                <h3 style={{ color: "#ef4444" }}>ACCOUNT SESSION & LOGOUT</h3>
+                <p>Sign out of your Chhavani Police officer session on this device</p>
+              </div>
+            </div>
+
+            <div className="logout-action-box">
+              <div className="logout-info">
+                <b>Currently Signed In Officer</b>
+                <p>{officer?.full_name || "Police Officer"} ({officer?.username || "-"})</p>
+              </div>
+
+              <button
+                type="button"
+                className="logout-trigger-btn"
+                onClick={() => setShowLogoutModal(true)}
+              >
+                <LogOut size={18} />
+                <span>Logout from Device</span>
+              </button>
+            </div>
+          </section>
+
+          <div className="form-actions mb-6">
             <button type="submit" className="primary-btn">
               <Save size={18} />
               Save Settings
@@ -511,6 +548,54 @@ function Settings() {
           </div>
         </div>
       </form>
+
+      {/* LOGOUT CONFIRMATION MODAL */}
+      {showLogoutModal && (
+        <div className="record-modal-overlay" onClick={() => setShowLogoutModal(false)}>
+          <div className="record-modal logout-confirm-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "420px" }}>
+            <div className="record-modal-header">
+              <div className="record-modal-heading">
+                <span style={{ color: "#ef4444" }}>Confirm Officer Logout</span>
+                <h2>Logout?</h2>
+              </div>
+              <button
+                type="button"
+                className="record-modal-close"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-5 text-left">
+              <p className="text-sm text-slate-300">
+                Are you sure you want to sign out of your <b>Chhavani Police</b> account?
+              </p>
+              <p className="text-xs text-slate-400 mt-2">
+                Your saved records remain secure in the database. You can log back in anytime using your officer credentials.
+              </p>
+            </div>
+
+            <div className="modal-buttons p-4" style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                className="secondary-btn"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="danger-btn"
+                onClick={handleConfirmLogout}
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* iOS Safari PWA Install Modal */}
       {showIosGuide && (
