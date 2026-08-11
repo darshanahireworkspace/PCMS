@@ -39,6 +39,35 @@ const getActiveUserId = () => {
   return null;
 };
 
+const getActiveOfficerInfo = () => {
+  try {
+    const adminUser = JSON.parse(localStorage.getItem("pcms_admin_user") || "null");
+    if (adminUser) {
+      return {
+        id: adminUser.id,
+        isSuperAdmin: true,
+        access_scope: "ALL",
+      };
+    }
+    const policeOfficer = JSON.parse(localStorage.getItem("policeOfficer") || "null");
+    if (policeOfficer) {
+      const isSuperAdmin =
+        policeOfficer.role === "SuperAdmin" ||
+        policeOfficer.role === "super_admin" ||
+        policeOfficer.username === "SPMalegaon" ||
+        policeOfficer.access_scope === "ALL";
+      return {
+        id: policeOfficer.id,
+        isSuperAdmin,
+        access_scope: isSuperAdmin ? "ALL" : (policeOfficer.access_scope || "OWN"),
+      };
+    }
+  } catch (e) {
+    console.warn("Active officer info parse notice:", e);
+  }
+  return null;
+};
+
 const sanitizeOtherPlacePayload = (data) => {
   const raw = { ...data };
 
@@ -86,12 +115,16 @@ export const createOtherPlace = async (inputData) => {
   return { data: { success: true, message: "Other place created successfully", data } };
 };
 
-// 2. GET ALL OTHER PLACES
+// 2. GET OTHER PLACES (Respects OWN access_scope for normal officers & GLOBAL for Super Admin)
 export const getOtherPlaces = async () => {
-  const { data, error } = await supabase
-    .from("other_places")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const activeOfficer = getActiveOfficerInfo();
+  let query = supabase.from("other_places").select("*");
+
+  if (activeOfficer && !activeOfficer.isSuperAdmin && activeOfficer.access_scope === "OWN" && activeOfficer.id) {
+    query = query.eq("created_by", activeOfficer.id);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) throw error;
   return { data: { success: true, data: data || [] } };
