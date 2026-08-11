@@ -38,9 +38,16 @@ function Login() {
   const [showIosModal, setShowIosModal] = useState(false);
 
   const isIOS =
-    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    typeof navigator !== "undefined" &&
+    (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
 
   useEffect(() => {
+    // If navigating under /admin or query param indicates admin PWA, redirect immediately
+    if (window.location.pathname.startsWith("/admin")) {
+      navigate("/admin/login", { replace: true });
+      return;
+    }
+
     localStorage.removeItem("username");
     localStorage.removeItem("password");
     localStorage.removeItem("loginUsername");
@@ -67,7 +74,7 @@ function Login() {
         handleBeforeInstallPrompt
       );
     };
-  }, []);
+  }, [navigate]);
 
   const handleInstallApp = async () => {
     if (isInstalled) {
@@ -219,15 +226,21 @@ function Login() {
               </div>
             </div>
 
-            <div className="card-logo-container">
-              <img src={policeLogo} alt="Logo" />
-              <h3>छावणी पोलिस स्टेशन</h3>
-              <p>पोलीस अधिकारी लॉगिन सिस्टीम</p>
+            <div className="card-header-block">
+              <div className="card-logo-container">
+                <img src={policeLogo} alt="Logo" />
+              </div>
+              <div className="card-title-block">
+                <h3>छावणी पोलिस स्टेशन</h3>
+                <p>पोलीस अधिकारी लॉगिन सिस्टीम</p>
+              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="login-form-v2" autoComplete="off">
               <div className="form-group-v2">
-                <label htmlFor="username">{t("login.username")} *</label>
+                <label htmlFor="username">
+                  {i18n.language === "mr" ? "युझरनेम (Username)" : "Username"} *
+                </label>
                 <div className="input-with-icon-v2">
                   <User size={18} className="field-icon-v2" />
                   <input
@@ -243,7 +256,9 @@ function Login() {
               </div>
 
               <div className="form-group-v2">
-                <label htmlFor="password">{t("login.password")} *</label>
+                <label htmlFor="password">
+                  {i18n.language === "mr" ? "पासवर्ड (Password)" : "Password"} *
+                </label>
                 <div className="input-with-icon-v2">
                   <Lock size={18} className="field-icon-v2" />
                   <input
@@ -272,11 +287,11 @@ function Login() {
                 disabled={loading}
               >
                 {loading ? (
-                  t("login.logging_in")
+                  t("login.logging_in", "Logging in...")
                 ) : (
                   <>
                     <ShieldCheck size={18} />
-                    {t("login.sign_in")}
+                    {t("login.sign_in", "Sign In")}
                   </>
                 )}
               </button>

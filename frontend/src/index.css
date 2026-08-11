@@ -1112,23 +1112,17 @@ input, select, textarea {
   padding-bottom: 14px;
 }
 
-.secure-portal-badge {
+.card-header-block {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 10px;
-  font-weight: 800;
-  color: var(--accent-primary-dark);
-  background: rgba(20, 184, 166, 0.12);
-  border: 1px solid rgba(20, 184, 166, 0.25);
-  padding: 4px 10px;
-  border-radius: 20px;
-  letter-spacing: 0.05em;
+  gap: 14px;
+  margin: 6px 0;
 }
 
 .card-logo-container {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
 }
 
 .card-logo-container img {
@@ -1137,16 +1131,23 @@ input, select, textarea {
   object-fit: contain;
 }
 
+.card-title-block {
+  display: flex;
+  flex-direction: column;
+}
+
 .card-title-block h3 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
 }
 
 .card-title-block p {
   font-size: 12px;
   color: var(--text-secondary);
-  margin-top: 2px;
+  margin: 2px 0 0 0;
 }
 
 .login-language-bar {
