@@ -1,4 +1,3 @@
-import API from "./axios";
 import { supabase } from "../lib/supabase";
 
 const isValidUuid = (val) => {
@@ -74,13 +73,6 @@ export const createFestivalPermission = async (inputData) => {
     }
   }
 
-  try {
-    const res = await API.post("/festival-permissions", objectData);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function createFestivalPermission notice, falling back to direct DB insert:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("festival_permissions")
     .insert([cleanRecord])
@@ -97,13 +89,6 @@ export const createFestivalPermission = async (inputData) => {
 
 // 2. GET ALL FESTIVAL PERMISSIONS
 export const getFestivalPermissions = async () => {
-  try {
-    const res = await API.get("/festival-permissions");
-    if (res?.data?.data && Array.isArray(res.data.data)) return res;
-  } catch (err) {
-    console.warn("Edge function getFestivalPermissions notice, falling back to direct DB query:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("festival_permissions")
     .select("*, religious_places(place_name, place_type)")
@@ -120,13 +105,6 @@ export const getFestivalPermissions = async () => {
 
 // 3. GET SINGLE FESTIVAL PERMISSION
 export const getSingleFestivalPermission = async (id) => {
-  try {
-    const res = await API.get(`/festival-permissions/${id}`);
-    if (res?.data?.data) return res;
-  } catch (err) {
-    console.warn("Edge function getSingleFestivalPermission notice, falling back to direct DB query:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("festival_permissions")
     .select("*")
@@ -149,13 +127,6 @@ export const updateFestivalPermission = async (id, inputData) => {
 
   const cleanRecord = sanitizeFestivalPayload(objectData);
 
-  try {
-    const res = await API.put(`/festival-permissions/${id}`, objectData);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function updateFestivalPermission notice, falling back to direct DB update:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("festival_permissions")
     .update(cleanRecord)
@@ -169,13 +140,6 @@ export const updateFestivalPermission = async (id, inputData) => {
 
 // 5. DELETE FESTIVAL PERMISSION
 export const deleteFestivalPermission = async (id) => {
-  try {
-    const res = await API.delete(`/festival-permissions/${id}`);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function deleteFestivalPermission notice, falling back to direct DB delete:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("festival_permissions")
     .delete()

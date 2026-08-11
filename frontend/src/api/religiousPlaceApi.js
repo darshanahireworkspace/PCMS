@@ -1,4 +1,3 @@
-import API from "./axios";
 import { supabase } from "../lib/supabase";
 
 const isValidUuid = (val) => {
@@ -77,15 +76,7 @@ export const createReligiousPlace = async (inputData) => {
     cleanRecord.created_by = userId;
   }
 
-  // First try Edge Function endpoint
-  try {
-    const res = await API.post("/religious-places", objectData);
-    if (res?.data?.success) return res;
-  } catch (edgeErr) {
-    console.warn("Edge function createReligiousPlace notice, falling back to direct DB insert:", edgeErr?.message);
-  }
-
-  // Resilient direct Supabase database insert
+  // Direct database insert
   const { data, error } = await supabase
     .from("religious_places")
     .insert([cleanRecord])
@@ -119,13 +110,6 @@ export const createReligiousPlace = async (inputData) => {
 
 // 2. GET ALL RELIGIOUS PLACES
 export const getReligiousPlaces = async () => {
-  try {
-    const res = await API.get("/religious-places");
-    if (res?.data?.data && Array.isArray(res.data.data)) return res;
-  } catch (err) {
-    console.warn("Edge function getReligiousPlaces notice, falling back to direct DB query:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("religious_places")
     .select("*")
@@ -137,13 +121,6 @@ export const getReligiousPlaces = async () => {
 
 // 3. GET SINGLE RELIGIOUS PLACE
 export const getSingleReligiousPlace = async (id) => {
-  try {
-    const res = await API.get(`/religious-places/${id}`);
-    if (res?.data?.data) return res;
-  } catch (err) {
-    console.warn("Edge function getSingleReligiousPlace notice, falling back to direct DB query:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("religious_places")
     .select("*")
@@ -166,13 +143,6 @@ export const updateReligiousPlace = async (id, inputData) => {
 
   const cleanRecord = sanitizeReligiousPlacePayload(objectData);
 
-  try {
-    const res = await API.put(`/religious-places/${id}`, objectData);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function updateReligiousPlace notice, falling back to direct DB update:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("religious_places")
     .update(cleanRecord)
@@ -186,13 +156,6 @@ export const updateReligiousPlace = async (id, inputData) => {
 
 // 5. DELETE RELIGIOUS PLACE
 export const deleteReligiousPlace = async (id) => {
-  try {
-    const res = await API.delete(`/religious-places/${id}`);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function deleteReligiousPlace notice, falling back to direct DB delete:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("religious_places")
     .delete()
@@ -207,10 +170,51 @@ export const deleteReligiousPlace = async (id) => {
 // 6. CHECK DUPLICATE PLACE
 export const checkDuplicatePlace = async (data) => {
   try {
-    const res = await API.post("/religious-places/check-duplicate", data);
-    if (res?.data?.data) return res;
+    const lat = Number(data.latitude);
+    const lng = Number(data.longitude);
+    const name = String(data.place_name || "").trim().toLowerCase();
+
+    const { data: allPlaces } = await supabase
+      .from("religious_places")
+      .select("id, place_name, place_type, address, area, latitude, longitude, image_url, photo_url, created_by, created_at");
+
+    if (allPlaces && allPlaces.length > 0) {
+      for (const place of allPlaces) {
+        let isDuplicate = false;
+        let distanceMeters = 99999;
+
+        if (place.latitude && place.longitude && !isNaN(lat) && !isNaN(lng)) {
+          const lat1 = (lat * Math.PI) / 180;
+          const lat2 = (Number(place.latitude) * Math.PI) / 180;
+          const dLat = ((Number(place.latitude) - lat) * Math.PI) / 180;
+          const dLon = ((Number(place.longitude) - lng) * Math.PI) / 180;
+          const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          distanceMeters = Math.round(6371e3 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+          if (distanceMeters <= 100) isDuplicate = true;
+        }
+
+        if (!isDuplicate && name && place.place_name?.toLowerCase().includes(name)) {
+          isDuplicate = true;
+        }
+
+        if (isDuplicate) {
+          return {
+            data: {
+              success: true,
+              data: {
+                isDuplicate: true,
+                distanceMeters,
+                existingPlace: place,
+              },
+            },
+          };
+        }
+      }
+    }
   } catch (err) {
-    console.warn("Edge function checkDuplicatePlace notice:", err?.message);
+    console.warn("Check duplicate notice:", err);
   }
   return { data: { success: true, data: { isDuplicate: false } } };
 };
@@ -222,13 +226,6 @@ export const recordPlaceVisit = async (data) => {
     ...data,
     officer_id: userId || data.officer_id,
   };
-
-  try {
-    const res = await API.post("/visits", payload);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function recordPlaceVisit notice, falling back to direct DB insert:", err?.message);
-  }
 
   const { data: visit, error } = await supabase
     .from("place_visits")
@@ -242,13 +239,6 @@ export const recordPlaceVisit = async (data) => {
 
 // 8. GET PLACE VISITS
 export const getPlaceVisits = async (placeId) => {
-  try {
-    const res = await API.get(`/visits?place_id=${placeId}`);
-    if (res?.data?.data) return res;
-  } catch (err) {
-    console.warn("Edge function getPlaceVisits notice, falling back to direct DB query:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("place_visits")
     .select("*")

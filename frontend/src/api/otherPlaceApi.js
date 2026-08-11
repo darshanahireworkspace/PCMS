@@ -1,4 +1,3 @@
-import API from "./axios";
 import { supabase } from "../lib/supabase";
 
 const isValidUuid = (val) => {
@@ -55,13 +54,6 @@ export const createOtherPlace = async (inputData) => {
     cleanRecord.created_by = userId;
   }
 
-  try {
-    const res = await API.post("/other-places", objectData);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function createOtherPlace notice, falling back to direct DB insert:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("other_places")
     .insert([cleanRecord])
@@ -78,13 +70,6 @@ export const createOtherPlace = async (inputData) => {
 
 // 2. GET ALL OTHER PLACES
 export const getOtherPlaces = async () => {
-  try {
-    const res = await API.get("/other-places");
-    if (res?.data?.data && Array.isArray(res.data.data)) return res;
-  } catch (err) {
-    console.warn("Edge function getOtherPlaces notice, falling back to direct DB query:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("other_places")
     .select("*")
@@ -96,13 +81,6 @@ export const getOtherPlaces = async () => {
 
 // 3. GET SINGLE OTHER PLACE
 export const getSingleOtherPlace = async (id) => {
-  try {
-    const res = await API.get(`/other-places/${id}`);
-    if (res?.data?.data) return res;
-  } catch (err) {
-    console.warn("Edge function getSingleOtherPlace notice, falling back to direct DB query:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("other_places")
     .select("*")
@@ -125,13 +103,6 @@ export const updateOtherPlace = async (id, inputData) => {
 
   const cleanRecord = sanitizeOtherPlacePayload(objectData);
 
-  try {
-    const res = await API.put(`/other-places/${id}`, objectData);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function updateOtherPlace notice, falling back to direct DB update:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("other_places")
     .update(cleanRecord)
@@ -145,13 +116,6 @@ export const updateOtherPlace = async (id, inputData) => {
 
 // 5. DELETE OTHER PLACE
 export const deleteOtherPlace = async (id) => {
-  try {
-    const res = await API.delete(`/other-places/${id}`);
-    if (res?.data?.success) return res;
-  } catch (err) {
-    console.warn("Edge function deleteOtherPlace notice, falling back to direct DB delete:", err?.message);
-  }
-
   const { data, error } = await supabase
     .from("other_places")
     .delete()
