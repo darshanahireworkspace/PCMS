@@ -25,6 +25,7 @@ import {
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import useAuth from "../hooks/useAuth";
+import { useAdminAuth } from "../context/AdminAuthContext";
 import usePermissions from "../hooks/usePermissions";
 import policeLogo from "../assets/police-logo.png";
 
@@ -44,6 +45,7 @@ const DEFAULT_SETTINGS = {
 
 function Settings() {
   const { officer, logout } = useAuth();
+  const { adminLogout } = useAdminAuth();
   const navigate = useNavigate();
   const { i18n } = useTranslation();
   const {
@@ -115,6 +117,7 @@ function Settings() {
 
   const handleConfirmLogout = () => {
     logout();
+    if (adminLogout) adminLogout();
     toast.success("Logged out successfully");
     setShowLogoutModal(false);
     navigate("/", { replace: true });

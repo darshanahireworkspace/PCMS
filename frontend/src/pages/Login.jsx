@@ -128,15 +128,6 @@ function Login() {
       const token = responsePayload?.token || res.data?.token;
 
       if (token && officerData) {
-        // If logged in as SuperAdmin or Admin, direct to Super Admin Console
-        if (officerData.role === "SuperAdmin" || officerData.role === "Admin") {
-          adminLogin(token, officerData);
-          toast.success(`Welcome to Admin Console, ${officerData.full_name || "Super Admin"}`);
-          navigate("/admin/dashboard", { replace: true });
-          return;
-        }
-
-        // Regular officer login
         login(token, officerData);
         toast.success("Login successful");
         navigate("/dashboard", { replace: true });

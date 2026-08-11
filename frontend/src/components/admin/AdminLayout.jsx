@@ -18,11 +18,13 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAdminAuth } from "../../context/AdminAuthContext";
+import useAuth from "../../hooks/useAuth";
 import policeLogo from "../../assets/police-logo.png";
 import "../../pages/admin/AdminPortal.css";
 
 function AdminLayout() {
   const { adminUser, adminLogout } = useAdminAuth();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -98,6 +100,8 @@ function AdminLayout() {
 
   const handleLogout = () => {
     adminLogout();
+    if (logout) logout();
+    toast.success("Logged out of Admin Portal");
     navigate("/admin/login", { replace: true });
   };
 
