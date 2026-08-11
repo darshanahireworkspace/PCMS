@@ -1,8 +1,8 @@
 {
-  "id": "/admin/",
-  "name": "Chhavani Police Admin",
-  "short_name": "Police Admin",
-  "description": "Chhavani Police Super Admin Console",
+  "id": "/admin/login",
+  "name": "मालेगाव शहर पोलीस Admin",
+  "short_name": "मालेगाव Admin",
+  "description": "मालेगाव शहर पोलीस सुपर ॲडमिन पोर्टल - Malegaon City Police Admin Console",
   "start_url": "/admin/login",
   "scope": "/admin/",
   "display": "standalone",

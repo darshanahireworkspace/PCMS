@@ -91,7 +91,7 @@ function AdminLogin() {
 
   const handleInstallApp = async () => {
     if (isInstalled) {
-      toast.success("Chhavani Police Admin App is already installed");
+      toast.success("मालेगाव शहर पोलीस Admin App आधीच इन्स्टॉल आहे.");
       return;
     }
 
@@ -104,12 +104,12 @@ function AdminLogin() {
       deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
       if (choice.outcome === "accepted") {
-        toast.success("Chhavani Police Admin App installed successfully!");
+        toast.success("मालेगाव शहर पोलीस Admin App यशस्वीरित्या इन्स्टॉल झाले!");
         setDeferredPrompt(null);
         setIsInstalled(true);
       }
     } else {
-      toast("Open browser menu (⋮) and select 'Add to Home screen' or 'Install App'", {
+      toast("ब्राऊझर मेनू (⋮) वर जा आणि 'Add to Home screen' किंवा 'Install App' निवडा.", {
         icon: "📲",
       });
     }
@@ -160,13 +160,13 @@ function AdminLogin() {
               <img src={policeLogo} alt="Maharashtra Police Emblem" />
             </div>
             <div className="admin-brand-titles">
-              <h1>Chhavani Police</h1>
-              <p>Super Admin Console</p>
+              <h1>मालेगाव शहर पोलीस</h1>
+              <p>सुपर ॲडमिन पोर्टल • Admin Console</p>
             </div>
           </div>
 
           <p className="admin-brand-desc">
-            Secure city-wide police administration, officer credential deployment, squad team sharing, and real-time security intelligence console.
+            मालेगाव शहर पोलीस मुख्यालय — अधिकारी क्रिडेंशियल, पथक व्यवस्थापन व शहर सुरक्षा इंटेलिजन्स पोर्टल.
           </p>
 
           <div className="admin-brand-footer">
@@ -184,7 +184,7 @@ function AdminLogin() {
         <div className="admin-login-card-panel">
           <div className="admin-card-header-bar">
             <div className="admin-card-titles">
-              <h2>Welcome Back</h2>
+              <h2>मालेगाव पोलीस ॲडमिन</h2>
               <p>Sign in to the Super Admin Console</p>
             </div>
 
@@ -207,10 +207,11 @@ function AdminLogin() {
                 <User size={18} className="field-icon" />
                 <input
                   id="admin-username"
+                  className="admin-login-input"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your admin username"
+                  placeholder="Enter admin username"
                   autoComplete="username"
                   required
                 />
@@ -223,10 +224,11 @@ function AdminLogin() {
                 <Lock size={18} className="field-icon" />
                 <input
                   id="admin-password"
+                  className="admin-login-input"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder="Enter password"
                   autoComplete="current-password"
                   required
                 />
@@ -264,13 +266,13 @@ function AdminLogin() {
                 onClick={handleInstallApp}
               >
                 <Download size={15} />
-                <span>Install Admin App</span>
+                <span>Install Admin App (ॲप इन्स्टॉल करा)</span>
               </button>
             )}
           </form>
 
           <div className="admin-card-footer">
-            <p>Chhavani Police Headquarters • Authority Portal</p>
+            <p>मालेगाव पोलीस मुख्यालय • Authority Portal</p>
           </div>
         </div>
       </div>
@@ -295,7 +297,7 @@ function AdminLogin() {
 
             <div className="py-3 text-left">
               <p className="text-sm text-slate-300 mb-3">
-                iPhone वर <b>Chhavani Police Admin App</b> इन्स्टॉल करण्यासाठी खालील सोप्या पायऱ्या वापरा:
+                iPhone वर <b>मालेगाव शहर पोलीस Admin App</b> इन्स्टॉल करण्यासाठी खालील सोप्या पायऱ्या वापरा:
               </p>
 
               <div className="ios-instructions-box">
