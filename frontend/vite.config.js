@@ -12,8 +12,8 @@ export default defineConfig({
       manifest: {
         id: "/",
 
-        name: "मालेगाव शहर पोलीस व्यवस्थापन प्रणाली",
-        short_name: "मालेगाव पोलीस",
+        name: "Malegaon Police",
+        short_name: "Malegaon Police",
         description: "मालेगाव शहर पोलीस व्यवस्थापन प्रणाली - Malegaon City Police Management System",
 
         start_url: "/",
