@@ -1338,7 +1338,7 @@
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
-/* MOBILE RESPONSIVE LAYOUT MEDIA RULES */
+/* MOBILE RESPONSIVE LAYOUT MEDIA RULES (IPHONE & ANDROID) */
 @media (max-width: 900px) {
   .admin-menu-toggle {
     display: inline-flex;
@@ -1349,6 +1349,8 @@
     top: 0;
     left: 0;
     bottom: 0;
+    width: 280px;
+    max-width: 85vw;
     transform: translateX(-100%);
     box-shadow: 8px 0 32px rgba(0, 0, 0, 0.6);
     z-index: 100;
@@ -1359,21 +1361,25 @@
   }
 
   .admin-topbar {
-    padding: 0 14px;
-    height: 58px;
+    padding: 0 12px;
+    height: 56px;
+  }
+
+  .admin-brand-topbar {
+    gap: 8px;
   }
 
   .admin-brand-title-marathi {
-    font-size: 13px;
-    max-width: 180px;
+    font-size: 12px;
+    max-width: 160px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .topbar-police-logo {
-    width: 26px;
-    height: 26px;
+    width: 24px;
+    height: 24px;
   }
 
   .hidden-xs {
@@ -1381,13 +1387,13 @@
   }
 
   .admin-main-content {
-    padding: 16px 12px;
+    padding: 14px 10px;
   }
 
   .admin-header-row {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
   }
 
   .admin-header-row button {
@@ -1395,28 +1401,124 @@
     justify-content: center;
   }
 
+  .admin-kpi-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .admin-kpi-card {
+    padding: 14px 12px;
+    gap: 10px;
+  }
+
+  .admin-kpi-card svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .admin-kpi-card h3 {
+    font-size: 20px;
+  }
+
+  .admin-kpi-card span {
+    font-size: 11px;
+  }
+
   .admin-grid-cards {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .admin-toolbar-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .admin-search-box {
+    width: 100%;
   }
 
   .table-responsive {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
   }
 
   .admin-table {
-    min-width: 650px;
+    min-width: 620px;
+    font-size: 12.5px;
+  }
+
+  .admin-table th, .admin-table td {
+    padding: 10px 8px;
+  }
+
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .admin-modal-card {
-    width: 95vw !important;
-    max-width: 95vw !important;
-    margin: 10px auto;
-    max-height: 90vh;
+    width: 94vw !important;
+    max-width: 94vw !important;
+    margin: 8px auto;
+    padding: 18px 14px;
+    max-height: 88vh;
     overflow-y: auto;
+    border-radius: 16px;
   }
 }
+
+@media (max-width: 480px) {
+  .admin-portal-stage {
+    padding: 16px 12px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .admin-portal-card {
+    padding: 24px 16px;
+    border-radius: 16px;
+  }
+
+  .admin-portal-logo {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 12px;
+  }
+
+  .admin-portal-header h2 {
+    font-size: 18px;
+    line-height: 1.3;
+  }
+
+  .admin-portal-header p {
+    font-size: 12px;
+  }
+
+  .admin-portal-input-wrapper input {
+    height: 46px;
+    font-size: 14px;
+  }
+
+  .admin-portal-submit-btn {
+    height: 46px;
+    font-size: 14px;
+  }
+
+  .admin-brand-title-marathi {
+    max-width: 130px;
+    font-size: 11.5px;
+  }
+
+  .admin-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 /* PWA INSTALL BUTTON & IOS MODAL STYLES */
 .admin-pwa-install-btn {
