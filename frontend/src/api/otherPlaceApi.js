@@ -1,12 +1,19 @@
 import API from "./axios";
 import { supabase } from "../lib/supabase";
 
+const isValidUuid = (val) => {
+  if (!val || typeof val !== "string") return false;
+  const trimmed = val.trim();
+  if (!trimmed || trimmed === "null" || trimmed === "undefined") return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed);
+};
+
 const getActiveUserId = () => {
   try {
     const adminUser = JSON.parse(localStorage.getItem("pcms_admin_user") || "null");
-    if (adminUser?.id) return adminUser.id;
+    if (adminUser?.id && isValidUuid(adminUser.id)) return adminUser.id;
     const policeOfficer = JSON.parse(localStorage.getItem("policeOfficer") || "null");
-    if (policeOfficer?.id) return policeOfficer.id;
+    if (policeOfficer?.id && isValidUuid(policeOfficer.id)) return policeOfficer.id;
   } catch (e) {
     console.warn("Active user parse notice:", e);
   }

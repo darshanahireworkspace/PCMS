@@ -11,9 +11,9 @@ const isValidUuid = (val) => {
 const getActiveUserId = () => {
   try {
     const adminUser = JSON.parse(localStorage.getItem("pcms_admin_user") || "null");
-    if (adminUser?.id) return adminUser.id;
+    if (adminUser?.id && isValidUuid(adminUser.id)) return adminUser.id;
     const policeOfficer = JSON.parse(localStorage.getItem("policeOfficer") || "null");
-    if (policeOfficer?.id) return policeOfficer.id;
+    if (policeOfficer?.id && isValidUuid(policeOfficer.id)) return policeOfficer.id;
   } catch (e) {
     console.warn("Active user parse notice:", e);
   }
