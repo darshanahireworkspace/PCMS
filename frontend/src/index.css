@@ -5862,3 +5862,102 @@ input, select, textarea {
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   PHOTO PREVIEW THUMBNAIL FIX (CONTROLLED COMPACT SIZE FOR ALL FORMS)
+   ========================================================================== */
+
+.photo-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.photo-preview-box img {
+  width: 120px !important;
+  height: 120px !important;
+  min-width: 120px !important;
+  min-height: 120px !important;
+  max-width: 120px !important;
+  max-height: 120px !important;
+  object-fit: cover !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 2px 8px rgba(6, 26, 64, 0.08) !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+}
+
+.photo-preview-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+
+.photo-change-btn,
+.photo-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.photo-change-btn {
+  background: var(--surface-white);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.photo-change-btn:hover {
+  background: var(--surface-soft);
+  border-color: var(--border-color-dark);
+}
+
+.photo-remove-btn {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+.photo-remove-btn:hover {
+  background: #fecaca;
+}
+
+/* Mobile responsive rules for photo preview */
+@media (max-width: 768px) {
+  .photo-preview-box {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .photo-preview-box img {
+    width: 100px !important;
+    height: 100px !important;
+    min-width: 100px !important;
+    min-height: 100px !important;
+    max-width: 100px !important;
+    max-height: 100px !important;
+    border-radius: 10px !important;
+  }
+
+  .photo-change-btn,
+  .photo-remove-btn {
+    padding: 6px 12px;
+    font-size: 11.5px;
+  }
+}
