@@ -12,11 +12,13 @@ function AdminProtectedRoute() {
     );
   }
 
-  const isAdmin =
+  // EXCLUSIVE CHECK: ONLY THE DESIGNATED SUPER ADMIN (SPMalegaon) SATISFIES ADMIN ROUTE GUARD
+  const isSuperAdmin =
     adminUser &&
+    adminUser.username === "SPMalegaon" &&
     (adminUser.role === "SuperAdmin" || adminUser.role === "Admin");
 
-  if (!isAdmin) {
+  if (!isSuperAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 

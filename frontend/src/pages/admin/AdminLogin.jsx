@@ -15,7 +15,7 @@ import {
   Moon,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { loginOfficer } from "../../api/authApi";
+import { loginAdminApi } from "../../api/authApi";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import policeLogo from "../../assets/police-logo.png";
 import "./admin-login.css";
@@ -82,9 +82,9 @@ function AdminLogin() {
     };
   }, []);
 
-  // If already authenticated as SuperAdmin or Admin, redirect to dashboard
+  // If already authenticated as SuperAdmin SPMalegaon, redirect to dashboard
   useEffect(() => {
-    if (adminUser && (adminUser.role === "SuperAdmin" || adminUser.role === "Admin")) {
+    if (adminUser && adminUser.username === "SPMalegaon") {
       navigate("/admin/dashboard", { replace: true });
     }
   }, [adminUser, navigate]);
@@ -127,11 +127,11 @@ function AdminLogin() {
 
     try {
       setLoading(true);
-      const res = await loginOfficer({ username: cleanUser, password: cleanPass });
+      const res = await loginAdminApi({ username: cleanUser, password: cleanPass });
       const { token, officer: authOfficer } = res.data.data;
 
-      if (authOfficer.role !== "SuperAdmin" && authOfficer.role !== "Admin") {
-        toast.error("Access denied: Not an administrator account");
+      if (!authOfficer || authOfficer.username !== "SPMalegaon") {
+        toast.error("Invalid admin credentials");
         return;
       }
 
@@ -140,11 +140,7 @@ function AdminLogin() {
       navigate("/admin/dashboard", { replace: true });
     } catch (err) {
       console.error("Admin login error:", err);
-      const errMsg =
-        err.response?.data?.message ||
-        err.response?.data?.error ||
-        "Invalid username or password.";
-      toast.error(errMsg);
+      toast.error("Invalid admin credentials");
     } finally {
       setLoading(false);
     }

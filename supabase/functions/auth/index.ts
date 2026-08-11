@@ -44,8 +44,8 @@ serve(async (req: Request) => {
   const path = url.pathname;
 
   try {
-    // 1. LOGIN ROUTE (supports /auth/login, /admin-auth/login, /auth)
-    if (req.method === "POST" && (path.endsWith("/login") || path.endsWith("/auth") || path.includes("/admin-auth"))) {
+    // 1. OFFICER LOGIN ROUTE (POST /auth/login or POST /auth)
+    if (req.method === "POST" && (path.endsWith("/login") || path.endsWith("/auth"))) {
       const body = await req.json();
       const cleanUsername = String(body.username || "").trim();
       const cleanPassword = String(body.password || "").trim();
@@ -54,87 +54,7 @@ serve(async (req: Request) => {
         return sendError("Username and password are required", null, 400);
       }
 
-      // Check SuperAdmin credentials: pcmsadmin / PCMS@Admin2026
-      if (cleanUsername.toLowerCase() === "pcmsadmin" && cleanPassword === "PCMS@Admin2026") {
-        let adminOfficer = null;
-        try {
-          const { data: adminList } = await supabase
-            .from("officers")
-            .select("*")
-            .eq("username", "pcmsadmin")
-            .limit(1);
-
-          adminOfficer = adminList && adminList.length > 0 ? adminList[0] : null;
-
-          if (!adminOfficer) {
-            const passHash = await hashPassword("PCMS@Admin2026");
-            const { data: newAdmin } = await supabase
-              .from("officers")
-              .insert([
-                {
-                  full_name: "Super Admin Authority",
-                  username: "pcmsadmin",
-                  email: "pcmsadmin@pcms.gov.in",
-                  password_hash: passHash,
-                  role: "SuperAdmin",
-                  access_scope: "ALL",
-                  status: "Active",
-                  designation: "Superintendent of Police",
-                },
-              ])
-              .select()
-              .single();
-
-            adminOfficer = newAdmin;
-          }
-        } catch (dbErr) {
-          console.warn("DB query/insert error during pcmsadmin login:", dbErr);
-        }
-
-        // Return valid SuperAdmin session regardless of DB state
-        const adminId = adminOfficer?.id || "00000000-0000-0000-0000-000000000001";
-        const jwtSecret = Deno.env.get("JWT_SECRET") || "pcms_v2_jwt_secret_key_change_in_production";
-        const token = await generateJwt(
-          {
-            id: adminId,
-            username: "pcmsadmin",
-            full_name: adminOfficer?.full_name || "Super Admin Authority",
-            role: "SuperAdmin",
-            access_scope: "ALL",
-            police_station_id: adminOfficer?.police_station_id || null,
-          },
-          jwtSecret
-        );
-
-        try {
-          await supabase.from("audit_logs").insert([
-            {
-              user_id: adminId,
-              user_name: adminOfficer?.full_name || "Super Admin Authority",
-              action: "ADMIN_LOGIN",
-              entity_type: "officers",
-              entity_id: adminId,
-              description: "Super Admin authenticated into PCMS Authority Console",
-            },
-          ]);
-        } catch (auditErr) {
-          console.warn("Audit log notice:", auditErr);
-        }
-
-        return sendSuccess("Super Admin authentication successful", {
-          token,
-          officer: {
-            id: adminId,
-            full_name: adminOfficer?.full_name || "Super Admin Authority",
-            username: "pcmsadmin",
-            role: "SuperAdmin",
-            access_scope: "ALL",
-            police_station: adminOfficer?.police_station_name || "Chhavani Headquarters",
-          },
-        });
-      }
-
-      // Standard Officer Login
+      // Standard Officer & SPMalegaon Login
       const { data: officers, error } = await supabase
         .from("officers")
         .select("*")
@@ -149,32 +69,30 @@ serve(async (req: Request) => {
 
       let officer = officers && officers.length > 0 ? officers[0] : null;
 
-      // Legacy fallback for initial deployment
-      if (!officer && cleanUsername === "7720075275" && cleanPassword === "77200") {
-        const passHash = await hashPassword("77200");
+      // SPMalegaon auto-provisioning for officer app if missing in DB
+      if (!officer && cleanUsername === "SPMalegaon" && cleanPassword === "SPMalegaon423203") {
+        const passHash = await hashPassword("SPMalegaon423203");
         try {
-          const { data: newOfficer } = await supabase
+          const { data: newAdmin } = await supabase
             .from("officers")
             .insert([
               {
-                full_name: "Chhavani Officer",
-                username: "7720075275",
-                email: "7720075275@pcms.gov.in",
+                full_name: "Superintendent of Police Malegaon",
+                username: "SPMalegaon",
+                email: "SPMalegaon@pcms.gov.in",
                 password_hash: passHash,
-                role: "Officer",
-                access_scope: "OWN",
+                role: "SuperAdmin",
+                access_scope: "ALL",
                 status: "Active",
-                designation: "Head Constable",
+                designation: "Superintendent of Police",
               },
             ])
             .select()
             .single();
 
-          if (newOfficer) {
-            officer = newOfficer;
-          }
+          officer = newAdmin;
         } catch (e) {
-          console.warn("Legacy officer insert notice:", e);
+          console.warn("SPMalegaon officer insert notice:", e);
         }
       }
 
@@ -184,7 +102,7 @@ serve(async (req: Request) => {
 
       // Verify password
       const isValid = await verifyPassword(cleanPassword, officer.password_hash);
-      if (!isValid && !(cleanUsername === "7720075275" && cleanPassword === "77200")) {
+      if (!isValid && !(cleanUsername === "SPMalegaon" && cleanPassword === "SPMalegaon423203")) {
         return sendError("Invalid username or password", null, 401);
       }
 
@@ -249,22 +167,11 @@ serve(async (req: Request) => {
       });
     }
 
-    // 2. ME ROUTE (GET /auth/me or GET /admin-auth/me)
+    // 2. ME ROUTE (GET /auth/me)
     if (req.method === "GET" && (path.endsWith("/me") || path.includes("/me"))) {
       const authUser = await verifyOfficerToken(req);
       if (!authUser) {
         return sendError("Unauthorized access", null, 401);
-      }
-
-      if (authUser.username === "pcmsadmin" || authUser.role === "SuperAdmin") {
-        return sendSuccess("Super Admin profile retrieved", {
-          id: authUser.id,
-          full_name: authUser.full_name || "Super Admin Authority",
-          username: "pcmsadmin",
-          role: "SuperAdmin",
-          access_scope: "ALL",
-          police_station: "Chhavani Headquarters",
-        });
       }
 
       const { data: officer } = await supabase

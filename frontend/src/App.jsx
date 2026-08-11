@@ -52,8 +52,8 @@ function AdminPublicRoute({ children }) {
 
   if (adminLoading) return null;
 
-  // If logged in as SuperAdmin/Admin, route to Super Admin dashboard
-  if (adminUser && (adminUser.role === "SuperAdmin" || adminUser.role === "Admin")) {
+  // If logged in as SuperAdmin SPMalegaon, route to Super Admin dashboard
+  if (adminUser && adminUser.username === "SPMalegaon") {
     return <Navigate to="/admin/dashboard" replace />;
   }
 

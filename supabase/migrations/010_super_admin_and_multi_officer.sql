@@ -169,6 +169,11 @@ ON CONFLICT (username) DO UPDATE SET
     access_scope = 'ALL',
     status = 'Active';
 
+-- Step 6.1: Deactivate legacy admin/test accounts so only SPMalegaon holds SuperAdmin status
+UPDATE public.officers 
+SET status = 'Inactive', role = 'Officer', access_scope = 'OWN' 
+WHERE username = 'pcmsadmin';
+
 
 -- =========================================================
 -- STEP 7: ROW LEVEL SECURITY (RLS) POLICIES
