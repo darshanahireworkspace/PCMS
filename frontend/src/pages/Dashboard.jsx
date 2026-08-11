@@ -19,6 +19,8 @@ import toast from "react-hot-toast";
 
 import { getDashboardStats } from "../api/dashboardApi";
 import { getPoliceStations } from "../api/policeStationApi";
+import { getReligiousPlaces } from "../api/religiousPlaceApi";
+import { getFestivalPermissions } from "../api/festivalApi";
 import { getOtherPlaces } from "../api/otherPlaceApi";
 import useAuth from "../hooks/useAuth";
 import VoiceField from "../components/common/VoiceField";
@@ -84,13 +86,58 @@ function Dashboard() {
   const fetchDashboard = async (station = selectedStation) => {
     try {
       setLoading(true);
-      const res = await getDashboardStats(station);
-      setStats(res.data.stats || {});
-      setReligiousPlaces(res.data.religiousPlaces || []);
-      setFestivalPermissions(res.data.festivalPermissions || []);
 
-      const otherRes = await getOtherPlaces();
-      setOtherPlaces(otherRes.data.data || []);
+      const [placesRes, festivalRes, otherRes] = await Promise.all([
+        getReligiousPlaces(),
+        getFestivalPermissions(),
+        getOtherPlaces(),
+      ]);
+
+      const rawPlaces = placesRes.data?.data || [];
+      const rawFestivals = festivalRes.data?.data || [];
+      const rawOthers = otherRes.data?.data || [];
+
+      const filteredPlaces = station
+        ? rawPlaces.filter(
+            (p) =>
+              p.police_station === station ||
+              p.police_station_name === station
+          )
+        : rawPlaces;
+
+      const filteredFestivals = station
+        ? rawFestivals.filter(
+            (f) =>
+              f.police_station === station ||
+              f.police_station_name === station
+          )
+        : rawFestivals;
+
+      const filteredOthers = station
+        ? rawOthers.filter(
+            (o) =>
+              o.police_station === station ||
+              o.police_station_name === station
+          )
+        : rawOthers;
+
+      setReligiousPlaces(filteredPlaces);
+      setFestivalPermissions(filteredFestivals);
+      setOtherPlaces(filteredOthers);
+
+      const highRiskCount = filteredPlaces.filter(
+        (p) => p.risk_level === "High"
+      ).length;
+      const pendingCount = filteredFestivals.filter(
+        (f) => f.permission_status === "Pending"
+      ).length;
+
+      setStats({
+        totalPlaces: filteredPlaces.length,
+        highRisk: highRiskCount,
+        festivalPermissions: filteredFestivals.length,
+        pendingPermissions: pendingCount,
+      });
     } catch (error) {
       console.error("Dashboard load error:", error);
       toast.error("Failed to load dashboard data");
