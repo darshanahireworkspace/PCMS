@@ -113,13 +113,18 @@ function Settings() {
   const handleInstallApp = async () => {
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice.outcome === "accepted") {
-        toast.success("PWA App installed successfully");
+    if (deferredPrompt && typeof deferredPrompt.prompt === "function") {
+      try {
+        await deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice?.outcome === "accepted") {
+          toast.success("PWA App installed successfully");
+        }
+      } catch (err) {
+        console.warn("PWA install prompt skipped:", err);
+      } finally {
+        setDeferredPrompt(null);
       }
-      setDeferredPrompt(null);
     } else if (isIos) {
       setShowIosGuide(true);
     } else {

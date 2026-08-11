@@ -26,8 +26,8 @@ function Login() {
   const { t, i18n } = useTranslation();
   const { login } = useAuth();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("7720075275");
+  const [password, setPassword] = useState("77200");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -106,8 +106,9 @@ function Login() {
         password: cleanPassword,
       });
 
-      const officerData = res.data?.officer || res.data?.data;
-      const token = res.data?.token;
+      const responsePayload = res.data?.data || res.data;
+      const officerData = responsePayload?.officer || responsePayload;
+      const token = responsePayload?.token || res.data?.token;
 
       if (token && officerData) {
         login(token, officerData);
