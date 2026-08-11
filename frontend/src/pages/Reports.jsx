@@ -196,138 +196,449 @@ function Reports() {
   };
 
   const handlePrint = () => {
-    const printArea = document.getElementById("reports-print-table-area");
-    if (!printArea) return;
+    if (filteredRows.length === 0) {
+      toast.error("No records available to print");
+      return;
+    }
 
     const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Pop-up blocked. Please allow pop-ups to print reports.");
+      return;
+    }
+
+    const religiousRows = filteredRows.filter((r) =>
+      String(r.recordType || "").includes("Religious")
+    );
+    const festivalRows = filteredRows.filter((r) =>
+      String(r.recordType || "").includes("Festival")
+    );
+    const otherRows = filteredRows.filter((r) =>
+      String(r.recordType || "").includes("Other")
+    );
+
+    const renderSectionTable = (rows, sectionTitle) => {
+      if (rows.length === 0) return "";
+      return `
+        <div class="report-section">
+          <div class="section-header">
+            <h4>${sectionTitle}</h4>
+            <span class="section-count">${rows.length} Records</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 35px; text-align: center;">#</th>
+                <th style="width: 120px;">Record Type</th>
+                <th>Name / Mandal</th>
+                <th style="width: 120px;">Category / Type</th>
+                <th style="width: 110px;">Area / Ward</th>
+                <th style="width: 90px; text-align: center;">Status / Risk</th>
+                <th style="width: 140px;">Contact & Mobile</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows
+                .map(
+                  (r, idx) => `
+                <tr>
+                  <td style="text-align: center;">${idx + 1}</td>
+                  <td><span class="type-tag">${r.recordType || "-"}</span></td>
+                  <td><b>${r.name || "-"}</b></td>
+                  <td>${r.category || "-"}</td>
+                  <td>${r.area || "-"}</td>
+                  <td style="text-align: center;"><span class="badge ${String(
+                    r.status || ""
+                  ).toLowerCase()}">${r.status || "-"}</span></td>
+                  <td>${r.contact || "-"}<br/><small style="color: #475569;">${
+                    r.mobile || "-"
+                  }</small></td>
+                </tr>
+              `
+                )
+                .join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    };
+
+    let mainContentHtml = "";
+    if (reportType === "all") {
+      mainContentHtml = `
+        ${renderSectionTable(religiousRows, "1. RELIGIOUS PLACES")}
+        ${renderSectionTable(festivalRows, "2. FESTIVAL PERMISSIONS")}
+        ${renderSectionTable(otherRows, "3. OTHER CITY PLACES")}
+      `;
+    } else {
+      mainContentHtml = renderSectionTable(
+        filteredRows,
+        getReportTitle().toUpperCase()
+      );
+    }
+
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>${getReportTitle()}</title>
+          <title>${getReportTitle()} — PCMS V2</title>
           <style>
+            @page {
+              size: A4 portrait;
+              margin: 12mm 14mm 14mm 14mm;
+            }
+
+            * {
+              box-sizing: border-box;
+            }
+
             body {
-              font-family: Arial, sans-serif;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
               margin: 0;
-              padding: 30px;
+              padding: 16px;
               color: #0f172a;
               background: #ffffff;
+              font-size: 11.5px;
+              line-height: 1.4;
             }
-            .report-header {
+
+            /* OFFICIAL POLICE HEADER */
+            .official-header {
               display: flex;
               align-items: center;
-              justify-content: center;
-              gap: 18px;
-              border-bottom: 3px solid #0b3d91;
-              padding-bottom: 18px;
-              margin-bottom: 24px;
+              justify-content: space-between;
+              border-bottom: 3px double #0b3d91;
+              padding-bottom: 12px;
+              margin-bottom: 16px;
             }
-            .report-header img {
-              width: 72px;
-              height: 72px;
+
+            .header-brand {
+              display: flex;
+              align-items: center;
+              gap: 14px;
+            }
+
+            .header-logo {
+              width: 64px;
+              height: 64px;
               object-fit: contain;
             }
-            .report-header h1 {
+
+            .header-text h5 {
               margin: 0;
-              font-size: 26px;
-              font-weight: 800;
-              color: #0b1f3a;
+              font-size: 11px;
+              font-weight: 700;
+              color: #64748b;
+              letter-spacing: 0.08em;
               text-transform: uppercase;
             }
-            .report-header h2 {
-              margin: 4px 0 0;
-              font-size: 16px;
-              color: #0b3d91;
-              text-align: center;
+
+            .header-text h2 {
+              margin: 2px 0 1px;
+              font-size: 18px;
+              font-weight: 900;
+              color: #0b1f3a;
+              letter-spacing: -0.01em;
+              text-transform: uppercase;
             }
-            .report-meta {
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 22px;
-              font-size: 13px;
-              color: #475569;
-              background: #f8fafc;
-              padding: 12px 16px;
+
+            .header-text h4 {
+              margin: 0;
+              font-size: 12px;
+              font-weight: 700;
+              color: #0b3d91;
+            }
+
+            .header-doc-badge {
+              text-align: right;
+              background: #f1f5f9;
+              border: 1px solid #cbd5e1;
+              padding: 6px 12px;
               border-radius: 8px;
             }
-            .report-title-card {
-              background: #eef6ff;
-              border-left: 5px solid #0b3d91;
-              padding: 14px 18px;
-              border-radius: 10px;
-              margin-bottom: 22px;
+
+            .header-doc-badge b {
+              display: block;
+              font-size: 12px;
+              color: #0b3d91;
             }
-            .report-title-card h3 {
-              margin: 0;
-              font-size: 20px;
+
+            .header-doc-badge span {
+              font-size: 10px;
+              color: #64748b;
+            }
+
+            /* DOCUMENT METADATA GRID */
+            .doc-meta-strip {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 10px;
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              padding: 10px 14px;
+              margin-bottom: 16px;
+            }
+
+            .meta-item {
+              display: flex;
+              flex-direction: column;
+            }
+
+            .meta-label {
+              font-size: 9.5px;
+              font-weight: 700;
+              color: #64748b;
+              text-transform: uppercase;
+              letter-spacing: 0.04em;
+            }
+
+            .meta-value {
+              font-size: 12px;
+              font-weight: 800;
               color: #0f172a;
+              margin-top: 1px;
             }
+
+            /* SUMMARY BREAKDOWN BAR */
+            .summary-breakdown {
+              display: flex;
+              gap: 20px;
+              background: #eef6ff;
+              border-left: 4px solid #0b3d91;
+              padding: 8px 14px;
+              border-radius: 4px;
+              margin-bottom: 18px;
+              font-size: 11px;
+            }
+
+            .summary-breakdown-item {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            }
+
+            .summary-breakdown-item b {
+              color: #0b3d91;
+            }
+
+            /* SECTIONS & TABLES */
+            .report-section {
+              margin-bottom: 20px;
+              page-break-inside: avoid;
+            }
+
+            .section-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              background: #0b3d91;
+              color: #ffffff;
+              padding: 6px 12px;
+              border-radius: 6px 6px 0 0;
+            }
+
+            .section-header h4 {
+              margin: 0;
+              font-size: 12px;
+              font-weight: 800;
+              letter-spacing: 0.03em;
+            }
+
+            .section-count {
+              font-size: 10px;
+              font-weight: 700;
+              background: rgba(255, 255, 255, 0.2);
+              padding: 2px 8px;
+              border-radius: 10px;
+            }
+
             table {
               width: 100%;
               border-collapse: collapse;
-              margin-top: 12px;
+              border: 1px solid #cbd5e1;
+              font-size: 11px;
             }
+
+            thead {
+              display: table-header-group;
+            }
+
             th {
-              background: #0b3d91;
-              color: white;
-              padding: 10px 12px;
-              font-size: 12px;
+              background: #f1f5f9;
+              color: #0f172a;
+              font-weight: 800;
               text-align: left;
+              padding: 7px 9px;
+              border: 1px solid #cbd5e1;
+              font-size: 10.5px;
+              text-transform: uppercase;
             }
-            td {
-              padding: 10px 12px;
-              border-bottom: 1px solid #e2e8f0;
-              font-size: 12px;
+
+            tr {
+              page-break-inside: avoid;
+              break-inside: avoid;
             }
+
             tr:nth-child(even) {
               background: #f8fafc;
             }
-            .footer {
-              margin-top: 50px;
-              display: flex;
-              justify-content: space-between;
-              font-size: 12px;
+
+            td {
+              padding: 6px 9px;
+              border: 1px solid #e2e8f0;
+              vertical-align: middle;
+            }
+
+            .type-tag {
+              font-size: 9.5px;
+              font-weight: 700;
               color: #475569;
+              background: #e2e8f0;
+              padding: 1px 6px;
+              border-radius: 4px;
             }
-            .sign {
+
+            .badge {
+              display: inline-block;
+              font-size: 9.5px;
+              font-weight: 800;
+              padding: 2px 7px;
+              border-radius: 10px;
+              text-transform: uppercase;
+            }
+
+            .badge.approved, .badge.low, .badge.active {
+              background: #dcfce7;
+              color: #15803d;
+            }
+
+            .badge.pending, .badge.medium {
+              background: #fef3c7;
+              color: #b45309;
+            }
+
+            .badge.high, .badge.rejected {
+              background: #fee2e2;
+              color: #b91c1c;
+            }
+
+            /* OFFICIAL FOOTER SIGNATURE */
+            .document-footer {
+              margin-top: 36px;
+              display: flex;
+              align-items: flex-end;
+              justify-content: space-between;
+              padding-top: 14px;
+              border-top: 1px solid #cbd5e1;
+              page-break-inside: avoid;
+            }
+
+            .footer-notes {
+              font-size: 10px;
+              color: #64748b;
+            }
+
+            .signature-block {
               text-align: center;
+              width: 220px;
             }
-            .sign-line {
-              width: 180px;
-              border-top: 1px solid #0f172a;
-              margin: 0 auto 8px;
+
+            .sig-line {
+              border-top: 1.5px dashed #0f172a;
+              margin-bottom: 6px;
             }
+
+            .sig-title {
+              font-size: 11px;
+              font-weight: 800;
+              color: #0f172a;
+            }
+
+            .sig-sub {
+              font-size: 9.5px;
+              color: #64748b;
+            }
+
             @media print {
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              body {
+                padding: 0;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
             }
           </style>
         </head>
         <body>
-          <div class="report-header">
-            <img src="/police-logo.png" />
-            <div>
-              <h1>Chhavani Police Station</h1>
-              <h2>Malegaon City Police Management System</h2>
+          <!-- OFFICIAL HEADER -->
+          <div class="official-header">
+            <div class="header-brand">
+              <img src="/police-logo.png" class="header-logo" alt="Maharashtra Police Logo" />
+              <div class="header-text">
+                <h5>MAHARASHTRA POLICE</h5>
+                <h2>CHHAVANI POLICE STATION, MALEGAON</h2>
+                <h4>POLICE CITY MANAGEMENT SYSTEM V2</h4>
+              </div>
+            </div>
+            <div class="header-doc-badge">
+              <b>OFFICIAL REPORT</b>
+              <span>CONFIDENTIAL</span>
             </div>
           </div>
 
-          <div class="report-meta">
-            <span><b>Date & Time:</b> ${new Date().toLocaleString()}</span>
-            <span><b>Selected Filter:</b> ${getReportTitle()}</span>
-            <span><b>Total Records:</b> ${filteredRows.length}</span>
+          <!-- DOCUMENT METADATA STRIP -->
+          <div class="doc-meta-strip">
+            <div class="meta-item">
+              <span class="meta-label">Report Category</span>
+              <span class="meta-value">${getReportTitle()}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Generated On</span>
+              <span class="meta-value">${new Date().toLocaleString("en-IN", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              })}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Total Records</span>
+              <span class="meta-value">${filteredRows.length} Locations</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Issuing Authority</span>
+              <span class="meta-value">Chhavani Station HQ</span>
+            </div>
           </div>
 
-          <div class="report-title-card">
-            <h3>${getReportTitle()}</h3>
-            <p>Official police management report generated from live city database records.</p>
+          <!-- SUMMARY BREAKDOWN BAR -->
+          <div class="summary-breakdown">
+            <div class="summary-breakdown-item">
+              <span>Religious Places:</span>
+              <b>${religiousRows.length}</b>
+            </div>
+            <div class="summary-breakdown-item">
+              <span>Festival Permissions:</span>
+              <b>${festivalRows.length}</b>
+            </div>
+            <div class="summary-breakdown-item">
+              <span>Other City Places:</span>
+              <b>${otherRows.length}</b>
+            </div>
           </div>
 
-          ${printArea.innerHTML}
+          <!-- MAIN TABLES CONTENT -->
+          ${mainContentHtml}
 
-          <div class="footer">
-            <span>Generated by Police City Management System V2</span>
-            <div class="sign">
-              <div class="sign-line"></div>
-              <b>Officer In-Charge Signature</b>
+          <!-- OFFICIAL FOOTER & SIGNATURE BLOCK -->
+          <div class="document-footer">
+            <div class="footer-notes">
+              <p style="margin: 0 0 2px;"><b>Police City Management System V2</b> — Malegaon City Command Center</p>
+              <p style="margin: 0;">This is an officially generated computer system report.</p>
+            </div>
+
+            <div class="signature-block">
+              <div class="sig-line"></div>
+              <div class="sig-title">Officer In-Charge Signature</div>
+              <div class="sig-sub">Chhavani Police Station, Malegaon</div>
             </div>
           </div>
         </body>
