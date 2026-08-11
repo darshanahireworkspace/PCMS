@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="mr">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Responsive viewport with iPhone safe-area support -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+    />
+
+    <!-- Admin PWA Manifest (Static HTML Link for iPhone & Android) -->
+    <link rel="manifest" href="/admin-manifest.webmanifest" />
+
+    <!-- App icons -->
+    <link rel="icon" type="image/png" href="/police-logo.png" />
+    <link rel="shortcut icon" href="/police-logo.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/police-logo.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/police-logo.png" />
+
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Browser / PWA theme -->
+    <meta name="theme-color" content="#071b3b" />
+    <meta name="background-color" content="#071b3b" />
+
+    <!-- Android PWA -->
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- iPhone / iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Super Admin" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- App information -->
+    <meta
+      name="description"
+      content="मालेगाव शहर पोलीस सुपर ॲडमिन पोर्टल - Malegaon City Police Admin Console"
+    />
+
+    <title>Super Admin | मालेगाव शहर पोलीस</title>
+  </head>
+
+  <body>
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

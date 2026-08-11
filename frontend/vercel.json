@@ -51,6 +51,14 @@
       "destination": "/assets/$1"
     },
     {
+      "source": "/admin/(.*)",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
       "source": "/((?!admin-manifest\\.webmanifest|manifest\\.webmanifest|sw\\.js|workbox-.*|registerSW\\.js|favicon\\.ico|police-logo\\.png|icon-192\\.png|icon-512\\.png|assets/|.*\\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }

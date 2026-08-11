@@ -1,8 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import { resolve } from "path";
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        main: resolve("index.html"),
+        admin: resolve("admin.html"),
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -11,17 +20,13 @@ export default defineConfig({
 
       manifest: {
         id: "/",
-
         name: "Malegaon Police",
         short_name: "Malegaon Police",
         description: "मालेगाव शहर पोलीस व्यवस्थापन प्रणाली - Malegaon City Police Management System",
-
         start_url: "/",
         scope: "/",
-
         display: "standalone",
         orientation: "portrait",
-
         theme_color: "#071b3b",
         background_color: "#071b3b",
 
@@ -50,27 +55,14 @@ export default defineConfig({
             type: "image/png",
             purpose: "any",
           },
-          {
-            src: "/icons/icon-192-maskable.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "maskable",
-          },
-          {
-            src: "/icons/icon-512-maskable.png",
-            sizes: "512x512",
-            type: "image/png",
-            purpose: "maskable",
-          },
         ],
       },
 
       workbox: {
-        navigateFallback: "/index.html",
-        navigateFallbackAllowlist: [/^\/admin/, /^\/[^/.]*$/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
+        navigateFallbackDenylist: [/^\/admin-manifest\.webmanifest$/, /^\/manifest\.webmanifest$/],
 
         runtimeCaching: [
           {
@@ -78,21 +70,6 @@ export default defineConfig({
             handler: "NetworkFirst",
             options: {
               cacheName: "supabase-cache",
-              networkTimeoutSeconds: 5,
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24,
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: /\/api\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
               networkTimeoutSeconds: 5,
               expiration: {
                 maxEntries: 50,
