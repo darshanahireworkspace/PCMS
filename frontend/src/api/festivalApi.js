@@ -1,5 +1,46 @@
 import { supabase } from "../lib/supabase";
 
+const ALLOWED_FESTIVAL_COLUMNS = new Set([
+  "id",
+  "religious_place_id",
+  "festival_name",
+  "festival_year",
+  "organizer_name",
+  "president_name",
+  "president_mobile",
+  "secretary_name",
+  "secretary_mobile",
+  "permission_number",
+  "start_date",
+  "end_date",
+  "start_time",
+  "end_time",
+  "expected_crowd",
+  "sound_permission",
+  "procession",
+  "route_details",
+  "address",
+  "area",
+  "taluka",
+  "district",
+  "state",
+  "pincode",
+  "latitude",
+  "longitude",
+  "google_map_link",
+  "photo_url",
+  "verification_status",
+  "permission_status",
+  "assigned_officer",
+  "police_notes",
+  "risk_level",
+  "created_by",
+  "updated_by",
+  "team_id",
+  "created_at",
+  "updated_at",
+]);
+
 const isValidUuid = (val) => {
   if (!val || typeof val !== "string") return false;
   const trimmed = val.trim();
@@ -20,38 +61,36 @@ const getActiveUserId = () => {
 };
 
 const sanitizeFestivalPayload = (data) => {
-  const payload = { ...data };
+  const raw = { ...data };
 
   // UUID verification
-  if (payload.religious_place_id && !isValidUuid(payload.religious_place_id)) {
-    payload.religious_place_id = null;
+  if (raw.religious_place_id && !isValidUuid(raw.religious_place_id)) {
+    raw.religious_place_id = null;
   }
-  if (payload.assigned_officer && !isValidUuid(payload.assigned_officer)) {
-    payload.assigned_officer = null;
+  if (raw.assigned_officer && !isValidUuid(raw.assigned_officer)) {
+    raw.assigned_officer = null;
   }
 
   // Parse numbers
-  payload.expected_crowd = payload.expected_crowd && !isNaN(parseInt(payload.expected_crowd, 10)) ? parseInt(payload.expected_crowd, 10) : 0;
-  payload.latitude = payload.latitude && !isNaN(parseFloat(payload.latitude)) ? parseFloat(payload.latitude) : null;
-  payload.longitude = payload.longitude && !isNaN(parseFloat(payload.longitude)) ? parseFloat(payload.longitude) : null;
+  raw.expected_crowd = raw.expected_crowd && !isNaN(parseInt(raw.expected_crowd, 10)) ? parseInt(raw.expected_crowd, 10) : 0;
+  raw.latitude = raw.latitude && !isNaN(parseFloat(raw.latitude)) ? parseFloat(raw.latitude) : null;
+  raw.longitude = raw.longitude && !isNaN(parseFloat(raw.longitude)) ? parseFloat(raw.longitude) : null;
 
   // Clean empty strings to null for optional columns
-  if (!payload.start_date || payload.start_date === "") payload.start_date = null;
-  if (!payload.end_date || payload.end_date === "") payload.end_date = null;
-  if (!payload.start_time || payload.start_time === "") payload.start_time = null;
-  if (!payload.end_time || payload.end_time === "") payload.end_time = null;
-  if (!payload.president_name || payload.president_name === "") payload.president_name = null;
-  if (!payload.president_mobile || payload.president_mobile === "") payload.president_mobile = null;
-  if (!payload.route_details || payload.route_details === "") payload.route_details = null;
-  if (!payload.address || payload.address === "") payload.address = null;
-  if (!payload.area || payload.area === "") payload.area = null;
-  if (!payload.taluka || payload.taluka === "") payload.taluka = null;
-  if (!payload.district || payload.district === "") payload.district = null;
+  if (!raw.start_date || raw.start_date === "") raw.start_date = null;
+  if (!raw.end_date || raw.end_date === "") raw.end_date = null;
+  if (!raw.start_time || raw.start_time === "") raw.start_time = null;
+  if (!raw.end_time || raw.end_time === "") raw.end_time = null;
 
-  delete payload.image;
-  delete payload.photo;
+  const cleanPayload = {};
+  Object.keys(raw).forEach((key) => {
+    if (ALLOWED_FESTIVAL_COLUMNS.has(key)) {
+      const val = raw[key];
+      cleanPayload[key] = val === "" ? null : val;
+    }
+  });
 
-  return payload;
+  return cleanPayload;
 };
 
 // 1. CREATE FESTIVAL PERMISSION

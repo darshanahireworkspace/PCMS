@@ -1,5 +1,25 @@
 import { supabase } from "../lib/supabase";
 
+const ALLOWED_OTHER_PLACE_COLUMNS = new Set([
+  "id",
+  "place_name",
+  "category",
+  "owner_name",
+  "mobile",
+  "address",
+  "area",
+  "latitude",
+  "longitude",
+  "google_map_link",
+  "photo_url",
+  "notes",
+  "created_by",
+  "updated_by",
+  "team_id",
+  "created_at",
+  "updated_at",
+]);
+
 const isValidUuid = (val) => {
   if (!val || typeof val !== "string") return false;
   const trimmed = val.trim();
@@ -20,22 +40,20 @@ const getActiveUserId = () => {
 };
 
 const sanitizeOtherPlacePayload = (data) => {
-  const payload = { ...data };
+  const raw = { ...data };
 
-  payload.latitude = payload.latitude && !isNaN(parseFloat(payload.latitude)) ? parseFloat(payload.latitude) : null;
-  payload.longitude = payload.longitude && !isNaN(parseFloat(payload.longitude)) ? parseFloat(payload.longitude) : null;
+  raw.latitude = raw.latitude && !isNaN(parseFloat(raw.latitude)) ? parseFloat(raw.latitude) : null;
+  raw.longitude = raw.longitude && !isNaN(parseFloat(raw.longitude)) ? parseFloat(raw.longitude) : null;
 
-  if (!payload.owner_name || payload.owner_name === "") payload.owner_name = null;
-  if (!payload.mobile || payload.mobile === "") payload.mobile = null;
-  if (!payload.address || payload.address === "") payload.address = null;
-  if (!payload.area || payload.area === "") payload.area = null;
-  if (!payload.google_map_link || payload.google_map_link === "") payload.google_map_link = null;
-  if (!payload.notes || payload.notes === "") payload.notes = null;
+  const cleanPayload = {};
+  Object.keys(raw).forEach((key) => {
+    if (ALLOWED_OTHER_PLACE_COLUMNS.has(key)) {
+      const val = raw[key];
+      cleanPayload[key] = val === "" ? null : val;
+    }
+  });
 
-  delete payload.image;
-  delete payload.photo;
-
-  return payload;
+  return cleanPayload;
 };
 
 // 1. CREATE OTHER PLACE

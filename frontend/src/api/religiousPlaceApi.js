@@ -1,5 +1,41 @@
 import { supabase } from "../lib/supabase";
 
+const ALLOWED_RELIGIOUS_PLACE_COLUMNS = new Set([
+  "id",
+  "place_name",
+  "religion",
+  "place_type",
+  "address",
+  "area",
+  "ward",
+  "taluka",
+  "district",
+  "state",
+  "pincode",
+  "latitude",
+  "longitude",
+  "google_map_link",
+  "police_station",
+  "regular_crowd",
+  "special_day_crowd",
+  "risk_level",
+  "contact_person",
+  "contact_mobile",
+  "president_name",
+  "secretary_name",
+  "committee_details",
+  "sensitive_notes",
+  "cctv_available",
+  "cctv_count",
+  "image_url",
+  "photo_url",
+  "created_by",
+  "updated_by",
+  "team_id",
+  "created_at",
+  "updated_at",
+]);
+
 const isValidUuid = (val) => {
   if (!val || typeof val !== "string") return false;
   const trimmed = val.trim();
@@ -20,42 +56,42 @@ const getActiveUserId = () => {
 };
 
 const sanitizeReligiousPlacePayload = (data) => {
-  const payload = { ...data };
+  const raw = { ...data };
 
   // Parse numbers
-  payload.latitude = payload.latitude && !isNaN(parseFloat(payload.latitude)) ? parseFloat(payload.latitude) : null;
-  payload.longitude = payload.longitude && !isNaN(parseFloat(payload.longitude)) ? parseFloat(payload.longitude) : null;
-  payload.cctv_count = payload.cctv_count && !isNaN(parseInt(payload.cctv_count, 10)) ? parseInt(payload.cctv_count, 10) : 0;
+  raw.latitude = raw.latitude && !isNaN(parseFloat(raw.latitude)) ? parseFloat(raw.latitude) : null;
+  raw.longitude = raw.longitude && !isNaN(parseFloat(raw.longitude)) ? parseFloat(raw.longitude) : null;
+  raw.cctv_count = raw.cctv_count && !isNaN(parseInt(raw.cctv_count, 10)) ? parseInt(raw.cctv_count, 10) : 0;
 
   // Map crowd estimation to integer if string provided
-  if (typeof payload.regular_crowd === "string") {
-    if (payload.regular_crowd === "Low") payload.regular_crowd = 100;
-    else if (payload.regular_crowd === "Medium") payload.regular_crowd = 500;
-    else if (payload.regular_crowd === "High") payload.regular_crowd = 1000;
-    else if (payload.regular_crowd === "Critical") payload.regular_crowd = 5000;
-    else payload.regular_crowd = parseInt(payload.regular_crowd, 10) || 0;
+  if (typeof raw.regular_crowd === "string") {
+    if (raw.regular_crowd === "Low") raw.regular_crowd = 100;
+    else if (raw.regular_crowd === "Medium") raw.regular_crowd = 500;
+    else if (raw.regular_crowd === "High") raw.regular_crowd = 1000;
+    else if (raw.regular_crowd === "Critical") raw.regular_crowd = 5000;
+    else raw.regular_crowd = parseInt(raw.regular_crowd, 10) || 0;
   }
 
   // Parse booleans
-  if (payload.cctv_available !== undefined) {
-    payload.cctv_available = payload.cctv_available === true || payload.cctv_available === "true" || payload.cctv_available === "Yes";
+  if (raw.cctv_available !== undefined) {
+    raw.cctv_available = raw.cctv_available === true || raw.cctv_available === "true" || raw.cctv_available === "Yes";
   }
 
-  // Clean empty strings to null for optional columns
-  if (!payload.address || payload.address === "") payload.address = null;
-  if (!payload.area || payload.area === "") payload.area = null;
-  if (!payload.ward || payload.ward === "") payload.ward = null;
-  if (!payload.taluka || payload.taluka === "") payload.taluka = null;
-  if (!payload.district || payload.district === "") payload.district = null;
-  if (!payload.state || payload.state === "") payload.state = null;
-  if (!payload.pincode || payload.pincode === "") payload.pincode = null;
-  if (!payload.contact_person || payload.contact_person === "") payload.contact_person = null;
-  if (!payload.contact_mobile || payload.contact_mobile === "") payload.contact_mobile = null;
+  // Handle sensitive notes / notes field mapping
+  if (raw.sensitive_notes || raw.notes) {
+    raw.sensitive_notes = raw.sensitive_notes || raw.notes;
+  }
 
-  delete payload.image;
-  delete payload.photo;
+  // Filter ONLY valid DB columns
+  const cleanPayload = {};
+  Object.keys(raw).forEach((key) => {
+    if (ALLOWED_RELIGIOUS_PLACE_COLUMNS.has(key)) {
+      const val = raw[key];
+      cleanPayload[key] = val === "" ? null : val;
+    }
+  });
 
-  return payload;
+  return cleanPayload;
 };
 
 // 1. CREATE RELIGIOUS PLACE
