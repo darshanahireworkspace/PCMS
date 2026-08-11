@@ -257,6 +257,7 @@ function AddReligiousPlace() {
             latitude: form.latitude,
             longitude: form.longitude,
             place_name: form.place_name,
+            place_type: form.place_type,
           });
 
           if (dupRes.data?.data?.isDuplicate) {
@@ -305,7 +306,8 @@ function AddReligiousPlace() {
       if (error.response?.status === 409) {
         toast.error("This religious place already exists");
       } else {
-        toast.error(error.response?.data?.message || "Failed to save religious place");
+        const detailErr = error.response?.data?.error || error.response?.data?.message || error.message;
+        toast.error(detailErr ? `Unable to save place: ${detailErr}` : "Failed to save religious place");
       }
     } finally {
       setLoading(false);
