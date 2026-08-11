@@ -123,13 +123,28 @@ function AdminLayout() {
     navigate("/admin/login", { replace: true });
   };
 
-  const navItems = [
-    { to: "/admin/dashboard", label: "Admin Overview", icon: Home },
-    { to: "/admin/officers", label: "Officers Directory", icon: Users },
-    { to: "/admin/teams", label: "Teams & Sharing", icon: UserCheck },
-    { to: "/admin/access-control", label: "Access Control", icon: Sliders },
-    { to: "/admin/duplicate-review", label: "Duplicate Review", icon: CopyCheck },
-    { to: "/admin/audit-logs", label: "System Audit Logs", icon: FileText },
+  const navGroups = [
+    {
+      title: "OVERVIEW",
+      items: [
+        { to: "/admin/dashboard", label: "Admin Overview", icon: Home },
+      ],
+    },
+    {
+      title: "PERSONNEL",
+      items: [
+        { to: "/admin/officers", label: "Officers Directory", icon: Users },
+        { to: "/admin/teams", label: "Teams & Sharing", icon: UserCheck },
+        { to: "/admin/access-control", label: "Access Control", icon: Sliders },
+      ],
+    },
+    {
+      title: "DATA QUALITY",
+      items: [
+        { to: "/admin/duplicate-review", label: "Duplicate Review", icon: CopyCheck },
+        { to: "/admin/audit-logs", label: "System Audit Logs", icon: FileText },
+      ],
+    },
   ];
 
   return (
@@ -153,42 +168,50 @@ function AdminLayout() {
         </div>
 
         <nav className="admin-sidebar-nav">
-          {navItems.map((item) => {
-            const IconComp = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `admin-nav-item ${isActive ? "active" : ""}`
-                }
-                onClick={() => setSidebarOpen(false)}
+          {navGroups.map((group) => (
+            <div key={group.title} className="sidebar-nav-group">
+              <span className="sidebar-group-title">{group.title}</span>
+              {group.items.map((item) => {
+                const IconComp = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      `admin-nav-item ${isActive ? "active" : ""}`
+                    }
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <IconComp size={18} />
+                    <span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
+
+          <div className="sidebar-nav-group">
+            <span className="sidebar-group-title">APPLICATION</span>
+            {!isInstalled && (
+              <button
+                type="button"
+                className="admin-nav-item install-link"
+                onClick={handleInstallApp}
               >
-                <IconComp size={18} />
-                <span>{item.label}</span>
-              </NavLink>
-            );
-          })}
+                <Download size={18} />
+                <span>Install Admin App</span>
+              </button>
+            )}
 
-          {!isInstalled && (
-            <button
-              type="button"
-              className="admin-nav-item install-link"
-              onClick={handleInstallApp}
+            <NavLink
+              to="/dashboard"
+              className="admin-nav-item command-link"
+              onClick={() => setSidebarOpen(false)}
             >
-              <Download size={18} />
-              <span>Install Admin App</span>
-            </button>
-          )}
-
-          <NavLink
-            to="/dashboard"
-            className="admin-nav-item command-link"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <Building size={18} />
-            <span>Back to Command App</span>
-          </NavLink>
+              <Building size={18} />
+              <span>Back to Command App</span>
+            </NavLink>
+          </div>
 
           <button
             type="button"

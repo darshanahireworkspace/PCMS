@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
   Users,
@@ -16,6 +16,11 @@ import {
   Eye,
   Database,
   Filter,
+  RefreshCcw,
+  CheckCircle2,
+  Clock,
+  Activity,
+  XCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -35,15 +40,21 @@ function AdminDashboard() {
   const [religiousPlaces, setReligiousPlaces] = useState([]);
   const [festivalPermissions, setFestivalPermissions] = useState([]);
   const [otherPlaces, setOtherPlaces] = useState([]);
+  
   const [loading, setLoading] = useState(true);
+  const [errorState, setErrorState] = useState(false);
 
+  // Filters state
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedOfficerFilter, setSelectedOfficerFilter] = useState("all");
+  const [selectedRiskFilter, setSelectedRiskFilter] = useState("all");
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   const loadData = async () => {
     try {
       setLoading(true);
+      setErrorState(false);
 
       const results = await Promise.allSettled([
         getOfficers(),
@@ -53,24 +64,36 @@ function AdminDashboard() {
         getOtherPlaces(),
       ]);
 
+      let hasSuccess = false;
+
       if (results[0].status === "fulfilled") {
         setOfficers(results[0].value.data?.data || []);
+        hasSuccess = true;
       }
       if (results[1].status === "fulfilled") {
         setTeams(results[1].value.data?.data || []);
+        hasSuccess = true;
       }
       if (results[2].status === "fulfilled") {
         setReligiousPlaces(results[2].value.data?.data || []);
+        hasSuccess = true;
       }
       if (results[3].status === "fulfilled") {
         setFestivalPermissions(results[3].value.data?.data || []);
+        hasSuccess = true;
       }
       if (results[4].status === "fulfilled") {
         setOtherPlaces(results[4].value.data?.data || []);
+        hasSuccess = true;
+      }
+
+      if (!hasSuccess) {
+        setErrorState(true);
       }
     } catch (err) {
       console.error("Admin dashboard load error:", err);
-      toast.error("Failed to load administration metrics");
+      setErrorState(true);
+      toast.error("Unable to load administration records");
     } finally {
       setLoading(false);
     }
@@ -80,7 +103,9 @@ function AdminDashboard() {
     loadData();
   }, []);
 
-  const officerMap = new Map(officers.map((o) => [o.id, o.full_name || o.username]));
+  const officerMap = useMemo(() => {
+    return new Map(officers.map((o) => [o.id, o.full_name || o.username]));
+  }, [officers]);
 
   const getOfficerName = (createdById) => {
     if (!createdById) return "Super Admin";
@@ -90,62 +115,93 @@ function AdminDashboard() {
   const activeOfficers = officers.filter((o) => o.status === "Active");
   const totalRecords = religiousPlaces.length + festivalPermissions.length + otherPlaces.length;
 
-  const combinedRecords = [
-    ...religiousPlaces.map((item) => ({
-      ...item,
-      recordCategory: "places",
-      categoryLabel: "Religious Place",
-      categoryColor: "teal",
-      name: item.place_name,
-      subtitle: `${item.place_type || "-"} • ${item.area || "-"}`,
-      creatorName: getOfficerName(item.created_by),
-      status: item.risk_level || "Low",
-      statusType: "risk",
-      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : "-",
-      raw: item,
-    })),
-    ...festivalPermissions.map((item) => ({
-      ...item,
-      recordCategory: "festivals",
-      categoryLabel: "Festival Permit",
-      categoryColor: "amber",
-      name: item.organizer_name || item.festival_name || item.president_name || "Festival Permit",
-      subtitle: `${item.festival_name || "-"} • ${item.area || "-"}`,
-      creatorName: getOfficerName(item.created_by || item.assigned_officer),
-      status: item.permission_status || "Pending",
-      statusType: "permission",
-      date: item.start_date || (item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"),
-      raw: item,
-    })),
-    ...otherPlaces.map((item) => ({
-      ...item,
-      recordCategory: "other",
-      categoryLabel: "Other Place",
-      categoryColor: "emerald",
-      name: item.place_name,
-      subtitle: `${item.category || "-"} • ${item.area || "-"}`,
-      creatorName: getOfficerName(item.created_by),
-      status: item.category || "General",
-      statusType: "category",
-      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : "-",
-      raw: item,
-    })),
-  ];
+  const combinedRecords = useMemo(() => {
+    return [
+      ...religiousPlaces.map((item) => ({
+        ...item,
+        recordCategory: "places",
+        categoryLabel: "Religious Place",
+        categoryColor: "teal",
+        name: item.place_name,
+        subtitle: `${item.place_type || "-"} • ${item.area || "-"}`,
+        creatorId: item.created_by,
+        creatorName: getOfficerName(item.created_by),
+        status: item.risk_level || "Low",
+        statusType: "risk",
+        date: item.created_at ? new Date(item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-",
+        rawDate: item.created_at ? new Date(item.created_at).getTime() : 0,
+        raw: item,
+      })),
+      ...festivalPermissions.map((item) => ({
+        ...item,
+        recordCategory: "festivals",
+        categoryLabel: "Festival Permit",
+        categoryColor: "amber",
+        name: item.organizer_name || item.festival_name || item.president_name || "Festival Permit",
+        subtitle: `${item.festival_name || "-"} • ${item.area || "-"}`,
+        creatorId: item.created_by || item.assigned_officer,
+        creatorName: getOfficerName(item.created_by || item.assigned_officer),
+        status: item.permission_status || "Pending",
+        statusType: "permission",
+        date: item.start_date || (item.created_at ? new Date(item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-"),
+        rawDate: item.created_at ? new Date(item.created_at).getTime() : 0,
+        raw: item,
+      })),
+      ...otherPlaces.map((item) => ({
+        ...item,
+        recordCategory: "other",
+        categoryLabel: "Other Place",
+        categoryColor: "emerald",
+        name: item.place_name,
+        subtitle: `${item.category || "-"} • ${item.area || "-"}`,
+        creatorId: item.created_by,
+        creatorName: getOfficerName(item.created_by),
+        status: item.category || "General",
+        statusType: "category",
+        date: item.created_at ? new Date(item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "-",
+        rawDate: item.created_at ? new Date(item.created_at).getTime() : 0,
+        raw: item,
+      })),
+    ].sort((a, b) => b.rawDate - a.rawDate);
+  }, [religiousPlaces, festivalPermissions, otherPlaces, officerMap]);
 
-  const filteredRecords = combinedRecords.filter((record) => {
-    if (activeTab !== "all" && record.recordCategory !== activeTab) {
-      return false;
-    }
-    const q = searchQuery.toLowerCase().trim();
-    if (!q) return true;
+  // Recent registrations (Top 5)
+  const recentRegistrations = useMemo(() => {
+    return combinedRecords.slice(0, 5);
+  }, [combinedRecords]);
 
-    return (
-      record.name?.toLowerCase().includes(q) ||
-      record.subtitle?.toLowerCase().includes(q) ||
-      record.creatorName?.toLowerCase().includes(q) ||
-      record.area?.toLowerCase().includes(q)
-    );
-  });
+  // Filtered records for master table
+  const filteredRecords = useMemo(() => {
+    return combinedRecords.filter((record) => {
+      if (activeTab !== "all" && record.recordCategory !== activeTab) {
+        return false;
+      }
+      if (selectedOfficerFilter !== "all" && record.creatorId !== selectedOfficerFilter) {
+        return false;
+      }
+      if (selectedRiskFilter !== "all") {
+        if (record.status?.toLowerCase() !== selectedRiskFilter.toLowerCase()) {
+          return false;
+        }
+      }
+      const q = searchQuery.toLowerCase().trim();
+      if (!q) return true;
+
+      return (
+        record.name?.toLowerCase().includes(q) ||
+        record.subtitle?.toLowerCase().includes(q) ||
+        record.creatorName?.toLowerCase().includes(q) ||
+        record.area?.toLowerCase().includes(q)
+      );
+    });
+  }, [combinedRecords, activeTab, selectedOfficerFilter, selectedRiskFilter, searchQuery]);
+
+  const clearFilters = () => {
+    setActiveTab("all");
+    setSearchQuery("");
+    setSelectedOfficerFilter("all");
+    setSelectedRiskFilter("all");
+  };
 
   const openRecordModal = (record) => {
     setSelectedRecord({
@@ -158,145 +214,244 @@ function AdminDashboard() {
 
   return (
     <div className="admin-page-container">
-      {/* WELCOME / OVERVIEW BANNER */}
-      <div className="admin-welcome-banner">
-        <div>
-          <h2>मालेगाव शहर पोलीस व्यवस्थापन</h2>
-          <p>
-            Welcome, <b>{adminUser?.full_name || "Superintendent of Police"}</b>. System Administration & Command Console.
-          </p>
+      {/* 1. DASHBOARD HEADER */}
+      <div className="admin-command-header">
+        <div className="header-brand-meta">
+          <span className="gov-badge">MALEGAON CITY POLICE ADMINISTRATION</span>
+          <h2>Super Admin Command Center</h2>
+          <p>System-wide operational monitoring & centralized data management console</p>
         </div>
-        <span className="admin-authority-chip">
-          <ShieldCheck size={15} />
-          Super Admin Authority
-        </span>
+        <div className="header-status-group">
+          <span className="status-indicator-pill live">
+            <span className="pulse-dot"></span>
+            System Operational
+          </span>
+          <span className="authority-role-pill">
+            <ShieldCheck size={14} />
+            Super Admin
+          </span>
+        </div>
       </div>
 
-      {/* CORE POLICE & PERSONNEL METRICS */}
-      <div className="admin-section-block">
-        <div className="section-title-sm">
-          <span>POLICE PERSONNEL & SQUADS</span>
+      {/* ERROR STATE RETRY BAR */}
+      {errorState && (
+        <div className="admin-error-banner">
+          <div className="flex items-center gap-2">
+            <XCircle size={18} className="text-rose-400" />
+            <span>Unable to load latest database records. Please verify network connectivity.</span>
+          </div>
+          <button type="button" onClick={loadData} className="retry-btn">
+            <RefreshCcw size={14} />
+            Retry
+          </button>
         </div>
-        <div className="admin-kpi-grid">
-          <div className="admin-kpi-card blue">
-            <Users size={24} />
-            <div>
-              <h3>{loading ? "..." : officers.length}</h3>
-              <span>Total Police Officers</span>
+      )}
+
+      {/* 2. PRIMARY SYSTEM OVERVIEW (KPI CARDS) */}
+      <div className="admin-section-wrapper">
+        <div className="section-header-compact">
+          <Activity size={16} className="text-sky" />
+          <span>SYSTEM OVERVIEW</span>
+        </div>
+
+        <div className="kpi-command-grid">
+          <div className="kpi-command-card sky">
+            <div className="kpi-header-row">
+              <span className="kpi-icon-box"><Users size={20} /></span>
+              <span className="kpi-trend">Personnel</span>
+            </div>
+            <div className="kpi-body">
+              <h3>{loading ? <span className="kpi-skeleton"></span> : officers.length}</h3>
+              <span className="kpi-label">Total Officers</span>
+              <p className="kpi-desc">Police personnel registered</p>
             </div>
           </div>
 
-          <div className="admin-kpi-card teal">
-            <ShieldCheck size={24} />
-            <div>
-              <h3>{loading ? "..." : activeOfficers.length}</h3>
-              <span>Active Personnel</span>
+          <div className="kpi-command-card teal">
+            <div className="kpi-header-row">
+              <span className="kpi-icon-box"><ShieldCheck size={20} /></span>
+              <span className="kpi-trend active">Active</span>
+            </div>
+            <div className="kpi-body">
+              <h3>{loading ? <span className="kpi-skeleton"></span> : activeOfficers.length}</h3>
+              <span className="kpi-label">Active Personnel</span>
+              <p className="kpi-desc">Officers actively logging in</p>
             </div>
           </div>
 
-          <div className="admin-kpi-card purple">
-            <Layers size={24} />
-            <div>
-              <h3>{loading ? "..." : teams.length}</h3>
-              <span>Squad Teams</span>
+          <div className="kpi-command-card cyan">
+            <div className="kpi-header-row">
+              <span className="kpi-icon-box"><MapPin size={20} /></span>
+              <span className="kpi-trend">Locations</span>
+            </div>
+            <div className="kpi-body">
+              <h3>{loading ? <span className="kpi-skeleton"></span> : religiousPlaces.length}</h3>
+              <span className="kpi-label">Religious Places</span>
+              <p className="kpi-desc">Registered temples, mosques, etc.</p>
             </div>
           </div>
 
-          <div className="admin-kpi-card blue">
-            <FileCheck size={24} />
+          <div className="kpi-command-card amber">
+            <div className="kpi-header-row">
+              <span className="kpi-icon-box"><CalendarCheck size={20} /></span>
+              <span className="kpi-trend">Events</span>
+            </div>
+            <div className="kpi-body">
+              <h3>{loading ? <span className="kpi-skeleton"></span> : festivalPermissions.length}</h3>
+              <span className="kpi-label">Festival Permits</span>
+              <p className="kpi-desc">Mandal & procession permits</p>
+            </div>
+          </div>
+
+          <div className="kpi-command-card emerald">
+            <div className="kpi-header-row">
+              <span className="kpi-icon-box"><Building size={20} /></span>
+              <span className="kpi-trend">Civic</span>
+            </div>
+            <div className="kpi-body">
+              <h3>{loading ? <span className="kpi-skeleton"></span> : otherPlaces.length}</h3>
+              <span className="kpi-label">Other Places</span>
+              <p className="kpi-desc">Commercial & sensitive spots</p>
+            </div>
+          </div>
+
+          <div className="kpi-command-card purple highlighted">
+            <div className="kpi-header-row">
+              <span className="kpi-icon-box"><Database size={20} /></span>
+              <span className="kpi-trend master">Master DB</span>
+            </div>
+            <div className="kpi-body">
+              <h3>{loading ? <span className="kpi-skeleton"></span> : totalRecords}</h3>
+              <span className="kpi-label">Total Registered Records</span>
+              <p className="kpi-desc">Total city data points monitored</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. CITY RECORDS BREAKDOWN */}
+      <div className="admin-section-wrapper">
+        <div className="section-header-compact">
+          <FileCheck size={16} className="text-teal" />
+          <span>CITY RECORDS BREAKDOWN</span>
+        </div>
+
+        <div className="city-records-summary-grid">
+          <div className="breakdown-card">
+            <div className="breakdown-accent teal"></div>
+            <div className="breakdown-info">
+              <span className="breakdown-type">Religious Places</span>
+              <h4>{loading ? "..." : religiousPlaces.length}</h4>
+              <p>Registered religious locations across all police station limits</p>
+            </div>
+          </div>
+
+          <div className="breakdown-card">
+            <div className="breakdown-accent amber"></div>
+            <div className="breakdown-info">
+              <span className="breakdown-type">Festival Permissions</span>
+              <h4>{loading ? "..." : festivalPermissions.length}</h4>
+              <p>Approved & pending festival mandal permits</p>
+            </div>
+          </div>
+
+          <div className="breakdown-card">
+            <div className="breakdown-accent emerald"></div>
+            <div className="breakdown-info">
+              <span className="breakdown-type">Other Places</span>
+              <h4>{loading ? "..." : otherPlaces.length}</h4>
+              <p>Other civic, commercial & sensitive data points</p>
+            </div>
+          </div>
+
+          <div className="breakdown-total-banner">
             <div>
+              <span>TOTAL CITY MASTER RECORDS</span>
               <h3>{loading ? "..." : totalRecords}</h3>
-              <span>Total Master Records</span>
             </div>
+            <Database size={28} className="text-sky opacity-80" />
           </div>
         </div>
       </div>
 
-      {/* ADMINISTRATIVE QUICK ACTIONS */}
-      <div className="admin-section-block">
-        <div className="section-title-sm">
-          <span>ADMINISTRATIVE QUICK ACTIONS</span>
+      {/* 4. RECENT REGISTRATIONS (RECENT ACTIVITY) */}
+      <div className="admin-section-wrapper">
+        <div className="section-header-compact space-between">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-amber" />
+            <span>RECENT REGISTRATIONS</span>
+          </div>
+          <button
+            type="button"
+            className="link-btn-sm"
+            onClick={() => {
+              const el = document.getElementById("all-records-section");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            View All Records ({totalRecords}) →
+          </button>
         </div>
-        <div className="quick-actions-grid">
-          <Link to="/admin/officers" className="quick-action-pill">
-            <UserPlus size={16} className="text-sky" />
-            <span>Add Police Officer</span>
-          </Link>
 
-          <Link to="/admin/officers" className="quick-action-pill">
-            <Users size={16} className="text-teal" />
-            <span>Officer Directory</span>
-          </Link>
+        {loading ? (
+          <div className="recent-grid-skeleton">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="recent-card-skeleton"></div>
+            ))}
+          </div>
+        ) : recentRegistrations.length === 0 ? (
+          <div className="empty-state-box">
+            <p>No recent registrations submitted yet.</p>
+          </div>
+        ) : (
+          <div className="recent-activity-grid">
+            {recentRegistrations.map((rec, idx) => (
+              <div key={`recent-${idx}`} className="recent-activity-card">
+                <div className="recent-card-top">
+                  <span className={`admin-cat-pill ${rec.categoryColor}`}>
+                    {rec.categoryLabel}
+                  </span>
+                  <span className="recent-date">📅 {rec.date}</span>
+                </div>
+                <h4 className="recent-title">{rec.name}</h4>
+                <p className="recent-subtitle">{rec.subtitle}</p>
 
-          <Link to="/admin/teams" className="quick-action-pill">
-            <Layers size={16} className="text-purple" />
-            <span>Teams & Sharing</span>
-          </Link>
-
-          <Link to="/admin/access-control" className="quick-action-pill">
-            <Sliders size={16} className="text-amber" />
-            <span>Access Control</span>
-          </Link>
-
-          <Link to="/admin/duplicate-review" className="quick-action-pill">
-            <CopyCheck size={16} className="text-emerald" />
-            <span>Duplicate Review</span>
-          </Link>
-
-          <Link to="/admin/audit-logs" className="quick-action-pill">
-            <FileText size={16} className="text-rose" />
-            <span>System Audit Logs</span>
-          </Link>
-        </div>
+                <div className="recent-card-footer">
+                  <span className="officer-name-tag">👤 {rec.creatorName}</span>
+                  <button
+                    type="button"
+                    className="admin-view-btn-sm"
+                    onClick={() => openRecordModal(rec)}
+                  >
+                    <Eye size={13} />
+                    View
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* CITY MASTER RECORDS STATISTICS */}
-      <div className="admin-section-block">
-        <div className="section-title-sm">
-          <span>CITY MASTER RECORDS STATISTICS</span>
-        </div>
-        <div className="admin-kpi-grid">
-          <div className="admin-kpi-card teal">
-            <MapPin size={24} />
-            <div>
-              <h3>{loading ? "..." : religiousPlaces.length}</h3>
-              <span>Religious Places</span>
-            </div>
-          </div>
-
-          <div className="admin-kpi-card amber">
-            <CalendarCheck size={24} />
-            <div>
-              <h3>{loading ? "..." : festivalPermissions.length}</h3>
-              <span>Festival Permits</span>
-            </div>
-          </div>
-
-          <div className="admin-kpi-card emerald">
-            <Building size={24} />
-            <div>
-              <h3>{loading ? "..." : otherPlaces.length}</h3>
-              <span>Other Places</span>
-            </div>
+      {/* 5. ALL REGISTERED RECORDS (MASTER TABLE WITH FILTERS) */}
+      <div className="admin-section-wrapper" id="all-records-section">
+        <div className="section-header-compact">
+          <Database size={16} className="text-sky" />
+          <div>
+            <span className="section-main-title">ALL REGISTERED RECORDS</span>
+            <p className="section-sub-title">View and manage records submitted by all officers.</p>
           </div>
         </div>
-      </div>
 
-      {/* SUPER ADMIN GLOBAL DATA VISIBILITY SECTION */}
-      <div className="admin-section-block">
-        <div className="section-title-sm">
-          <Database size={16} />
-          <span>ALL REGISTERED CITY DATA (GLOBAL OFFICER DATA STREAM)</span>
-        </div>
-
-        <div className="admin-data-filter-bar">
-          <div className="admin-tab-buttons">
+        {/* 6. CATEGORY TABS */}
+        <div className="admin-toolbar-container">
+          <div className="admin-category-tabs">
             <button
               type="button"
               className={activeTab === "all" ? "active" : ""}
               onClick={() => setActiveTab("all")}
             >
-              All ({totalRecords})
+              All Records ({totalRecords})
             </button>
             <button
               type="button"
@@ -307,39 +462,84 @@ function AdminDashboard() {
             </button>
             <button
               type="button"
-              className={activeTab === "festivals" ? "active" : ""}
-              onClick={() => setActiveTab("festivals")}
-            >
-              Festival Permits ({festivalPermissions.length})
-            </button>
-            <button
-              type="button"
               className={activeTab === "other" ? "active" : ""}
               onClick={() => setActiveTab("other")}
             >
               Other Places ({otherPlaces.length})
             </button>
+            <button
+              type="button"
+              className={activeTab === "festivals" ? "active" : ""}
+              onClick={() => setActiveTab("festivals")}
+            >
+              Festival Permissions ({festivalPermissions.length})
+            </button>
           </div>
 
-          <div className="admin-search-box">
-            <Search size={16} />
-            <input
-              type="text"
-              placeholder="Search by name, officer, or area..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          {/* 7. SEARCH & FILTERS TOOLBAR */}
+          <div className="admin-filter-controls">
+            <div className="admin-search-input-wrap">
+              <Search size={15} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search place, mandal, officer, area..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="clear-search-btn"
+                  onClick={() => setSearchQuery("")}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            <select
+              className="admin-select-filter"
+              value={selectedOfficerFilter}
+              onChange={(e) => setSelectedOfficerFilter(e.target.value)}
+            >
+              <option value="all">Created By: All Officers</option>
+              {officers.map((off) => (
+                <option key={off.id} value={off.id}>
+                  {off.full_name || off.username}
+                </option>
+              ))}
+            </select>
+
+            <select
+              className="admin-select-filter"
+              value={selectedRiskFilter}
+              onChange={(e) => setSelectedRiskFilter(e.target.value)}
+            >
+              <option value="all">Risk / Status: All</option>
+              <option value="High">High Risk</option>
+              <option value="Medium">Medium Risk</option>
+              <option value="Low">Low Risk</option>
+              <option value="Approved">Approved Permit</option>
+              <option value="Pending">Pending Permit</option>
+            </select>
+
+            {(searchQuery || selectedOfficerFilter !== "all" || selectedRiskFilter !== "all" || activeTab !== "all") && (
+              <button type="button" className="clear-filters-btn" onClick={clearFilters}>
+                Clear Filters
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="admin-table-wrapper">
-          <table className="admin-data-table">
+        {/* 8. DATA TABLE */}
+        <div className="admin-table-container">
+          <table className="admin-command-table">
             <thead>
               <tr>
-                <th>Category</th>
-                <th>Name / Mandal</th>
-                <th>Sub-details / Area</th>
-                <th>Created By Officer</th>
+                <th>Type</th>
+                <th>Name / Details</th>
+                <th>Location / Area</th>
+                <th>Created By</th>
                 <th>Status / Risk</th>
                 <th>Date</th>
                 <th>Action</th>
@@ -347,40 +547,54 @@ function AdminDashboard() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="text-center py-4">
-                    Loading global registered data...
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={`skel-${idx}`}>
+                    <td colSpan={7}>
+                      <div className="table-row-skeleton"></div>
+                    </td>
+                  </tr>
+                ))
               ) : filteredRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-4">
-                    No registered records found.
+                  <td colSpan={7}>
+                    <div className="table-empty-box">
+                      {activeTab === "places"
+                        ? "No religious places registered yet."
+                        : activeTab === "festivals"
+                        ? "No festival permissions registered yet."
+                        : activeTab === "other"
+                        ? "No other places registered yet."
+                        : "No matching registered records found."}
+                    </div>
                   </td>
                 </tr>
               ) : (
                 filteredRecords.map((rec, idx) => (
-                  <tr key={`admin-rec-${idx}`}>
+                  <tr key={`master-row-${idx}`}>
                     <td>
                       <span className={`admin-cat-pill ${rec.categoryColor}`}>
                         {rec.categoryLabel}
                       </span>
                     </td>
-                    <td className="font-semibold">{rec.name}</td>
-                    <td>{rec.subtitle}</td>
                     <td>
-                      <span className="officer-name-tag">👤 {rec.creatorName}</span>
+                      <div className="cell-name-title">{rec.name}</div>
                     </td>
                     <td>
-                      <span className={`status-badge ${rec.status.toLowerCase()}`}>
+                      <div className="cell-subtitle">{rec.subtitle}</div>
+                    </td>
+                    <td>
+                      <span className="officer-badge">👤 {rec.creatorName}</span>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${(rec.status || "low").toLowerCase()}`}>
                         {rec.status}
                       </span>
                     </td>
-                    <td>{rec.date}</td>
+                    <td className="cell-date">{rec.date}</td>
                     <td>
                       <button
                         type="button"
-                        className="admin-view-btn"
+                        className="admin-action-view-btn"
                         onClick={() => openRecordModal(rec)}
                       >
                         <Eye size={14} />
@@ -395,6 +609,46 @@ function AdminDashboard() {
         </div>
       </div>
 
+      {/* 10. ADMINISTRATIVE TOOLS (QUICK ACTIONS AT BOTTOM) */}
+      <div className="admin-section-wrapper text-muted-section">
+        <div className="section-header-compact">
+          <Sliders size={16} className="text-slate-400" />
+          <span>ADMINISTRATIVE TOOLS</span>
+        </div>
+        <div className="admin-tools-grid">
+          <Link to="/admin/officers" className="admin-tool-card">
+            <UserPlus size={16} className="text-sky" />
+            <span>Add Police Officer</span>
+          </Link>
+
+          <Link to="/admin/officers" className="admin-tool-card">
+            <Users size={16} className="text-teal" />
+            <span>Officers Directory</span>
+          </Link>
+
+          <Link to="/admin/teams" className="admin-tool-card">
+            <Layers size={16} className="text-purple" />
+            <span>Squad Teams</span>
+          </Link>
+
+          <Link to="/admin/access-control" className="admin-tool-card">
+            <Sliders size={16} className="text-amber" />
+            <span>Access Control</span>
+          </Link>
+
+          <Link to="/admin/duplicate-review" className="admin-tool-card">
+            <CopyCheck size={16} className="text-emerald" />
+            <span>Duplicate Review</span>
+          </Link>
+
+          <Link to="/admin/audit-logs" className="admin-tool-card">
+            <FileText size={16} className="text-rose" />
+            <span>System Audit Logs</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* 17. VIEW RECORD DETAILS MODAL */}
       {selectedRecord && (
         <RecordDetailsModal
           record={selectedRecord}
