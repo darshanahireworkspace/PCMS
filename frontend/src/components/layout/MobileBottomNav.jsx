@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Home,
@@ -13,30 +13,8 @@ import {
 } from "lucide-react";
 
 function MobileBottomNav() {
-  const [hidden, setHidden] = useState(false);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    let scrollTimer;
-
-    const handleScroll = () => {
-      setHidden(true);
-      setShowAddMenu(false);
-
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        setHidden(false);
-      }, 600);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      clearTimeout(scrollTimer);
-    };
-  }, []);
 
   const handleNavigate = (path) => {
     setShowAddMenu(false);
@@ -84,7 +62,7 @@ function MobileBottomNav() {
         </div>
       )}
 
-      <nav className={`mobile-bottom-nav ${hidden ? "hide-bottom-nav" : ""}`}>
+      <nav className="mobile-bottom-nav">
         <NavLink to="/dashboard" onClick={() => setShowAddMenu(false)}>
           <Home size={19} />
           <span>Home</span>
