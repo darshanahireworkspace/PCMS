@@ -50,10 +50,10 @@ const isValidUuid = (val) => {
 
 const getActiveUserId = () => {
   try {
-    const adminUser = JSON.parse(localStorage.getItem("pcms_admin_user") || "null");
-    if (adminUser?.id && isValidUuid(adminUser.id)) return adminUser.id;
     const policeOfficer = JSON.parse(localStorage.getItem("policeOfficer") || "null");
     if (policeOfficer?.id && isValidUuid(policeOfficer.id)) return policeOfficer.id;
+    const adminUser = JSON.parse(localStorage.getItem("pcms_admin_user") || "null");
+    if (adminUser?.id && isValidUuid(adminUser.id)) return adminUser.id;
   } catch (e) {
     console.warn("Active user parse notice:", e);
   }
@@ -62,26 +62,40 @@ const getActiveUserId = () => {
 
 const getActiveOfficerInfo = () => {
   try {
-    const adminUser = JSON.parse(localStorage.getItem("pcms_admin_user") || "null");
-    if (adminUser) {
-      return {
-        id: adminUser.id,
-        isSuperAdmin: true,
-        access_scope: "ALL",
-      };
+    // 1. Inspect active normal officer session FIRST
+    const policeOfficerStr = localStorage.getItem("policeOfficer");
+    if (policeOfficerStr && policeOfficerStr !== "null" && policeOfficerStr !== "undefined") {
+      const policeOfficer = JSON.parse(policeOfficerStr);
+      if (policeOfficer && typeof policeOfficer === "object") {
+        const isSuperAdmin =
+          policeOfficer.role === "SuperAdmin" ||
+          policeOfficer.role === "super_admin" ||
+          policeOfficer.username === "SPMalegaon" ||
+          policeOfficer.access_scope === "ALL";
+
+        return {
+          id: policeOfficer.id,
+          username: policeOfficer.username,
+          role: policeOfficer.role || "Officer",
+          access_scope: isSuperAdmin ? "ALL" : (policeOfficer.access_scope || "OWN"),
+          isSuperAdmin,
+        };
+      }
     }
-    const policeOfficer = JSON.parse(localStorage.getItem("policeOfficer") || "null");
-    if (policeOfficer) {
-      const isSuperAdmin =
-        policeOfficer.role === "SuperAdmin" ||
-        policeOfficer.role === "super_admin" ||
-        policeOfficer.username === "SPMalegaon" ||
-        policeOfficer.access_scope === "ALL";
-      return {
-        id: policeOfficer.id,
-        isSuperAdmin,
-        access_scope: isSuperAdmin ? "ALL" : (policeOfficer.access_scope || "OWN"),
-      };
+
+    // 2. Fallback to admin user ONLY if no normal officer session is active
+    const adminUserStr = localStorage.getItem("pcms_admin_user");
+    if (adminUserStr && adminUserStr !== "null" && adminUserStr !== "undefined") {
+      const adminUser = JSON.parse(adminUserStr);
+      if (adminUser && typeof adminUser === "object") {
+        return {
+          id: adminUser.id,
+          username: adminUser.username || "SPMalegaon",
+          role: "SuperAdmin",
+          access_scope: "ALL",
+          isSuperAdmin: true,
+        };
+      }
     }
   } catch (e) {
     console.warn("Active officer info parse notice:", e);

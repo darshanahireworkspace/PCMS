@@ -34,6 +34,10 @@ export function AuthProvider({ children }) {
 
   const login = (token, user) => {
     if (!token || !user) return;
+    if (user.username !== "SPMalegaon" && user.role !== "SuperAdmin") {
+      localStorage.removeItem("pcms_admin_token");
+      localStorage.removeItem("pcms_admin_user");
+    }
     localStorage.setItem("policeToken", token);
     localStorage.setItem("policeOfficer", JSON.stringify(user));
     setOfficer(user);
