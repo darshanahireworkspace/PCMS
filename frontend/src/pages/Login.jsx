@@ -26,8 +26,8 @@ function Login() {
   const { t, i18n } = useTranslation();
   const { login } = useAuth();
 
-  const [username, setUsername] = useState("7720075275");
-  const [password, setPassword] = useState("77200");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -39,6 +39,13 @@ function Login() {
     /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   useEffect(() => {
+    localStorage.removeItem("username");
+    localStorage.removeItem("password");
+    localStorage.removeItem("loginUsername");
+    localStorage.removeItem("loginPassword");
+    sessionStorage.removeItem("username");
+    sessionStorage.removeItem("password");
+
     const installed =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone === true;
@@ -195,7 +202,7 @@ function Login() {
               </select>
             </div>
 
-            <form onSubmit={handleLogin} className="login-form-v2">
+            <form onSubmit={handleLogin} className="login-form-v2" autoComplete="off">
               <div className="input-field-wrapper">
                 <label htmlFor="login-username">{t("username") || "Username"}</label>
                 <div className="input-inner">
@@ -207,7 +214,7 @@ function Login() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
-                    autoComplete="username"
+                    autoComplete="off"
                   />
                 </div>
               </div>
@@ -223,7 +230,7 @@ function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    autoComplete="current-password"
+                    autoComplete="off"
                   />
                   <button
                     type="button"
