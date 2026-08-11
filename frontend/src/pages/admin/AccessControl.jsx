@@ -39,7 +39,7 @@ function AccessControl() {
   }, []);
 
   const handleScopeChange = async (officer, newScope) => {
-    if (officer.username === "pcmsadmin" || officer.role === "SuperAdmin") {
+    if (officer.username === "SPMalegaon" || officer.role === "SuperAdmin") {
       toast.error("Super Admin scope cannot be downgraded from ALL");
       return;
     }
@@ -57,7 +57,7 @@ function AccessControl() {
   };
 
   const handleRoleChange = async (officer, newRole) => {
-    if (officer.username === "pcmsadmin" || officer.role === "SuperAdmin") {
+    if (officer.username === "SPMalegaon" || officer.role === "SuperAdmin") {
       toast.error("Super Admin role cannot be modified");
       return;
     }
@@ -213,7 +213,7 @@ function AccessControl() {
                 </tr>
               ) : (
                 filteredOfficers.map((off) => {
-                  const isSuperAdmin = off.username === "pcmsadmin" || off.role === "SuperAdmin";
+                  const isSuperAdmin = off.username === "SPMalegaon" || off.role === "SuperAdmin";
                   return (
                     <tr key={off.id}>
                       <td>

@@ -10,7 +10,7 @@ exports.loginOfficer = async (username, password) => {
     throw { statusCode: 400, message: "Username and password are required" };
   }
 
-  // Fetch officer from Supabase
+  // Fetch officer from Supabase database (status must be Active)
   const { data: officers, error } = await supabase
     .from("officers")
     .select("*")
@@ -23,30 +23,7 @@ exports.loginOfficer = async (username, password) => {
     throw { statusCode: 500, message: "Database query failed" };
   }
 
-  let officer = officers && officers.length > 0 ? officers[0] : null;
-
-  // Initial provisioning handling for 7720075275 / 77200
-  if (!officer && cleanUsername === "7720075275" && cleanPassword === "77200") {
-    const defaultPasswordHash = await bcrypt.hash("77200", 10);
-    const { data: newOfficer, error: createError } = await supabase
-      .from("officers")
-      .insert([
-        {
-          full_name: "Admin Officer",
-          username: "7720075275",
-          email: "7720075275@pcms.gov.in",
-          password_hash: defaultPasswordHash,
-          role: "Admin",
-          status: "Active",
-        },
-      ])
-      .select()
-      .single();
-
-    if (!createError && newOfficer) {
-      officer = newOfficer;
-    }
-  }
+  const officer = officers && officers.length > 0 ? officers[0] : null;
 
   if (!officer) {
     throw { statusCode: 401, message: "Invalid username or password" };
@@ -56,11 +33,6 @@ exports.loginOfficer = async (username, password) => {
   let isMatch = false;
   if (officer.password_hash) {
     isMatch = await bcrypt.compare(cleanPassword, officer.password_hash);
-  }
-
-  // Direct check fallback for initial credential during migration
-  if (!isMatch && cleanUsername === "7720075275" && cleanPassword === "77200") {
-    isMatch = true;
   }
 
   if (!isMatch) {

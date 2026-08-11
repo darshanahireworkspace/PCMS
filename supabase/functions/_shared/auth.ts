@@ -54,10 +54,6 @@ export const hashPassword = async (password: string): Promise<string> => {
 
 export const verifyPassword = async (password: string, storedHash: string): Promise<boolean> => {
   if (!storedHash) return false;
-  // If legacy bcrypt mock string is present, allow login fallback
-  if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$")) {
-    return true;
-  }
   const hashedInput = await hashPassword(password);
   return hashedInput === storedHash;
 };
