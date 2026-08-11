@@ -81,8 +81,14 @@ API.interceptors.response.use(
 
     if (error.response?.status === 401) {
       const requestUrl = error.config?.url || "";
+      const msg = String(error.response?.data?.message || "").toLowerCase();
 
-      if (!requestUrl.includes("/auth/login") && !requestUrl.includes("/admin-auth/login")) {
+      // Only wipe session if the endpoint is NOT login AND explicitly states session invalidation or account inactive
+      if (
+        !requestUrl.includes("/auth/login") &&
+        !requestUrl.includes("/admin-auth/login") &&
+        (msg.includes("inactive") || msg.includes("disabled") || msg.includes("invalid token") || msg.includes("expired"))
+      ) {
         if (localStorage.getItem("pcms_admin_token")) {
           localStorage.removeItem("pcms_admin_token");
           localStorage.removeItem("pcms_admin_user");

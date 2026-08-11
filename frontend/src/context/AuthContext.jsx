@@ -33,9 +33,15 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  // Multi-device force logout session validation
+  // Account-scoped session invalidation (Triggers ONLY when specific officer status is strictly Inactive)
   useEffect(() => {
-    if (!officer?.id || officer.username === "SPMalegaon" || officer.role === "SuperAdmin") {
+    if (
+      !officer?.id ||
+      officer.username === "SPMalegaon" ||
+      officer.role === "SuperAdmin" ||
+      officer.role === "Admin" ||
+      officer.access_scope === "ALL"
+    ) {
       return undefined;
     }
 
@@ -49,8 +55,10 @@ export function AuthProvider({ children }) {
           .eq("id", officerId)
           .maybeSingle();
 
-        if (error || !dbOfficer || dbOfficer.status !== "Active") {
-          console.warn(`Session for officer ${officerId} is inactive or deleted. Triggering force logout.`);
+        // ONLY force logout if database explicitly responds AND status is strictly 'Inactive'
+        // Network errors or missing responses MUST NEVER trigger logout for active users
+        if (!error && dbOfficer && dbOfficer.status === "Inactive") {
+          console.warn(`Account for officer ${officerId} has been deactivated. Logging out.`);
           logout();
           window.location.href = "/login";
         }
@@ -59,28 +67,28 @@ export function AuthProvider({ children }) {
       }
     };
 
-    // 1. Initial verification on mount
+    // 1. Verification on mount
     verifySessionActive();
 
-    // 2. Periodic poll every 5 seconds
-    const intervalId = setInterval(verifySessionActive, 5000);
+    // 2. Periodic poll every 10 seconds
+    const intervalId = setInterval(verifySessionActive, 10000);
 
     // 3. Tab focus & visibility change verification
     const handleFocus = () => verifySessionActive();
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleFocus);
 
-    // 4. Supabase Realtime event listener for immediate multi-device invalidation
+    // 4. Supabase Realtime event listener scoped strictly to this officer's UUID
     let channel;
     try {
       channel = supabase
         .channel(`officer-force-logout-${officerId}`)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "officers", filter: `id=eq.${officerId}` },
+          { event: "UPDATE", schema: "public", table: "officers", filter: `id=eq.${officerId}` },
           (payload) => {
-            if (payload.eventType === "DELETE" || payload.new?.status !== "Active") {
-              console.warn("Real-time deletion event received for officer. Logging out immediately.");
+            if (payload.new && payload.new.status === "Inactive") {
+              console.warn(`Real-time deactivation event for officer ${officerId}. Logging out.`);
               logout();
               window.location.href = "/login";
             }
@@ -99,7 +107,7 @@ export function AuthProvider({ children }) {
         supabase.removeChannel(channel);
       }
     };
-  }, [officer?.id, officer?.username, officer?.role]);
+  }, [officer?.id, officer?.username, officer?.role, officer?.access_scope]);
 
   const login = (token, user) => {
     if (!token || !user) return;
