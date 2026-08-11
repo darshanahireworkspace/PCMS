@@ -85,7 +85,10 @@ function AccessControl() {
       off.police_station_name?.toLowerCase().includes(q);
 
     const matchRole = roleFilter === "ALL" || off.role === roleFilter;
-    const matchScope = scopeFilter === "ALL" || off.access_scope === scopeFilter;
+    const matchScope =
+      scopeFilter === "ALL" ||
+      (scopeFilter === "SCOPE_ALL" && off.access_scope === "ALL") ||
+      off.access_scope === scopeFilter;
 
     return nameMatch && matchRole && matchScope;
   });
@@ -179,7 +182,7 @@ function AccessControl() {
               <option value="ALL">All Scopes</option>
               <option value="OWN">OWN Only</option>
               <option value="TEAM">TEAM Shared</option>
-              <option value="ALL">ALL City Records</option>
+              <option value="SCOPE_ALL">ALL City Records</option>
             </select>
           </div>
         </div>
