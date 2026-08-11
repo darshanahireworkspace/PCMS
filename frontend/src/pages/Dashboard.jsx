@@ -74,6 +74,8 @@ function Dashboard() {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
 
+  const [selectedRecordFilter, setSelectedRecordFilter] = useState("all");
+
   const [stats, setStats] = useState({});
   const [religiousPlaces, setReligiousPlaces] = useState([]);
   const [festivalPermissions, setFestivalPermissions] = useState([]);
@@ -142,7 +144,7 @@ function Dashboard() {
       title: "Religious Places",
       value: stats.totalPlaces || 0,
       subtitle: "Registered locations",
-      icon: <Landmark size={22} />,
+      icon: <Landmark size={18} />,
       accentClass: "teal-accent",
     },
     {
@@ -150,7 +152,7 @@ function Dashboard() {
       title: "Festival Permissions",
       value: stats.festivalPermissions || 0,
       subtitle: "Approved mandals",
-      icon: <CalendarCheck size={22} />,
+      icon: <CalendarCheck size={18} />,
       accentClass: "amber-accent",
     },
     {
@@ -158,18 +160,88 @@ function Dashboard() {
       title: "Other Places",
       value: otherPlaces.length,
       subtitle: "Civic & commercial",
-      icon: <Store size={22} />,
+      icon: <Store size={18} />,
       accentClass: "emerald-accent",
     },
     {
-      key: "total",
+      key: "all",
       title: "Total Records",
       value: totalRecordCount,
       subtitle: "Monitored entities",
-      icon: <Database size={22} />,
+      icon: <Database size={18} />,
       accentClass: "blue-accent",
     },
   ];
+
+  const allCombinedRecords = [
+    ...religiousPlaces.map((item) => ({
+      ...item,
+      rawItem: item,
+      recordCategory: "places",
+      categoryLabel: "Religious Place",
+      categoryColor: "teal",
+      title: item.place_name,
+      subtitle: `${item.place_type || "-"} • ${item.area || "-"}`,
+      location: item.address || item.area || "-",
+      status: item.risk_level || "Low",
+      statusType: "risk",
+      photo: item.image_url || item.photo_url || item.photo,
+      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : null,
+    })),
+    ...festivalPermissions.map((item) => ({
+      ...item,
+      rawItem: item,
+      recordCategory: "festivals",
+      categoryLabel: "Festival Mandal",
+      categoryColor: "purple",
+      title:
+        item.organizer_name ||
+        item.president_name ||
+        item.festival_name ||
+        "Festival Permission",
+      subtitle: `${item.festival_name || "-"} • ${item.area || "-"}`,
+      location: item.address || item.area || "-",
+      status: item.permission_status || "Pending",
+      statusType: "permission",
+      photo: item.photo_url || item.photo,
+      date: item.start_date || (item.created_at ? new Date(item.created_at).toLocaleDateString() : null),
+    })),
+    ...otherPlaces.map((item) => ({
+      ...item,
+      rawItem: item,
+      recordCategory: "other",
+      categoryLabel: "Other Place",
+      categoryColor: "blue",
+      title: item.place_name,
+      subtitle: `${item.category || "-"} • ${item.area || "-"}`,
+      location: item.address || item.area || "-",
+      status: item.category || "General",
+      statusType: "category",
+      photo: item.photo_url || item.photo,
+      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : null,
+    })),
+  ];
+
+  const filteredAllRecords = allCombinedRecords.filter((item) => {
+    if (selectedRecordFilter !== "all" && item.recordCategory !== selectedRecordFilter) {
+      return false;
+    }
+
+    const query = dashboardSearch.toLowerCase().trim();
+    if (!query) return true;
+
+    return (
+      item.title?.toLowerCase().includes(query) ||
+      item.subtitle?.toLowerCase().includes(query) ||
+      item.contact_person?.toLowerCase().includes(query) ||
+      item.president_name?.toLowerCase().includes(query) ||
+      item.organizer_name?.toLowerCase().includes(query) ||
+      item.owner_name?.toLowerCase().includes(query) ||
+      String(item.contact_mobile || "").includes(query) ||
+      String(item.president_mobile || "").includes(query) ||
+      String(item.mobile || "").includes(query)
+    );
+  });
 
   const searchResults = [
     ...religiousPlaces.map((item) => ({
@@ -335,15 +407,15 @@ function Dashboard() {
         )}
       </div>
 
-      {/* PRIMARY METRICS */}
+      {/* PRIMARY METRICS (INTERACTIVE FILTER CARDS) */}
       <div className="dashboard-primary-metrics">
         {primaryCards.map((card) => (
           <div
             className={`metric-card ${card.accentClass} ${
-              selectedModule === card.key ? "active-metric-card" : ""
+              selectedRecordFilter === card.key ? "selected-filter-card active-metric-card" : ""
             }`}
             key={card.key}
-            onClick={() => setSelectedModule(card.key)}
+            onClick={() => setSelectedRecordFilter(card.key)}
             role="button"
             tabIndex={0}
           >
@@ -365,127 +437,109 @@ function Dashboard() {
         ))}
       </div>
 
-      {/* RISK MONITORING SECTION */}
-      <section className="dashboard-risk-section">
+      {/* ALL RECORDS SECTION */}
+      <section className="dashboard-all-records-section">
         <div className="section-header-strip">
-          <div>
-            <h3 className="section-title-text">Risk Monitoring</h3>
-            <p className="section-subtitle-text">
-              Current distribution of monitored locations
-            </p>
+          <div className="all-records-header-left">
+            <h3 className="section-title-text">All Records</h3>
+            <div className="filter-status-pill">
+              <span>Showing: </span>
+              <b>
+                {selectedRecordFilter === "places"
+                  ? "Religious Places"
+                  : selectedRecordFilter === "festivals"
+                  ? "Festival Permissions"
+                  : selectedRecordFilter === "other"
+                  ? "Other Places"
+                  : "All Records"}
+              </b>
+              <span className="record-count-badge">
+                ({filteredAllRecords.length})
+              </span>
+            </div>
           </div>
 
-          <div className="filter-station-box">
-            <select
-              className="station-filter-select"
-              value={selectedStation}
-              onChange={(e) => {
-                setSelectedStation(e.target.value);
-                fetchDashboard(e.target.value);
-              }}
-            >
-              <option value="">All Police Stations</option>
-              {policeStations.map((station) => (
-                <option key={station.id} value={station.station_name}>
-                  {station.station_name}
-                </option>
-              ))}
-            </select>
-
+          {selectedRecordFilter !== "all" && (
             <button
               type="button"
-              className="secondary-btn btn-sm"
-              onClick={() => fetchDashboard()}
-              disabled={loading}
+              className="clear-filter-btn"
+              onClick={() => setSelectedRecordFilter("all")}
             >
-              <RefreshCcw size={15} />
-              {loading ? "..." : "Refresh"}
+              <X size={14} /> Clear Filter
             </button>
-          </div>
+          )}
         </div>
 
-        <div className="risk-cards-grid">
-          <div className="risk-card high-risk-card">
-            <div className="risk-card-header">
-              <div className="risk-card-icon red">
-                <ShieldAlert size={20} />
-              </div>
-              <span className="risk-tag red">HIGH RISK</span>
-            </div>
-
-            <div className="risk-card-body">
-              <h2>{loading ? "..." : stats.highRisk || 0}</h2>
-              <p>Locations requiring attention</p>
-            </div>
-
-            <div className="risk-progress-bar red">
-              <div
-                style={{
-                  width: `${Math.min(
-                    100,
-                    ((stats.highRisk || 0) /
-                      Math.max(1, stats.totalPlaces || 1)) *
-                      100
-                  )}%`,
-                }}
-              ></div>
-            </div>
+        {filteredAllRecords.length === 0 ? (
+          <div className="no-records-card">
+            <p>No matching records found for the selected filter.</p>
           </div>
-
-          <div className="risk-card medium-risk-card">
-            <div className="risk-card-header">
-              <div className="risk-card-icon amber">
-                <AlertCircle size={20} />
-              </div>
-              <span className="risk-tag amber">MEDIUM RISK</span>
-            </div>
-
-            <div className="risk-card-body">
-              <h2>{loading ? "..." : stats.mediumRisk || 0}</h2>
-              <p>Moderate supervision required</p>
-            </div>
-
-            <div className="risk-progress-bar amber">
+        ) : (
+          <div className="all-records-grid">
+            {filteredAllRecords.map((record) => (
               <div
-                style={{
-                  width: `${Math.min(
-                    100,
-                    ((stats.mediumRisk || 0) /
-                      Math.max(1, stats.totalPlaces || 1)) *
-                      100
-                  )}%`,
+                className="record-card-item"
+                key={`${record.recordCategory}-${record.id}`}
+                onClick={() => {
+                  if (record.recordCategory === "places") {
+                    openReligiousRecord(record.rawItem);
+                  } else if (record.recordCategory === "festivals") {
+                    openFestivalRecord(record.rawItem);
+                  } else {
+                    openOtherRecord(record.rawItem);
+                  }
                 }}
-              ></div>
-            </div>
-          </div>
+              >
+                <div className="record-card-top">
+                  {record.photo ? (
+                    <img
+                      src={record.photo}
+                      alt={record.title}
+                      className="record-thumb-img"
+                    />
+                  ) : (
+                    <div className={`record-thumb-placeholder ${record.categoryColor}`}>
+                      {record.recordCategory === "places" ? (
+                        <Landmark size={20} />
+                      ) : record.recordCategory === "festivals" ? (
+                        <CalendarCheck size={20} />
+                      ) : (
+                        <Store size={20} />
+                      )}
+                    </div>
+                  )}
 
-          <div className="risk-card low-risk-card">
-            <div className="risk-card-header">
-              <div className="risk-card-icon green">
-                <ShieldCheck size={20} />
+                  <div className="record-card-info">
+                    <div className="record-category-row">
+                      <span className={`record-cat-badge ${record.categoryColor}`}>
+                        {record.categoryLabel}
+                      </span>
+                      {record.statusType === "risk" ? (
+                        <span className={`risk-badge ${(record.status || "low").toLowerCase()}`}>
+                          {record.status}
+                        </span>
+                      ) : record.statusType === "permission" ? (
+                        <span className={`permission-status ${(record.status || "pending").toLowerCase()}`}>
+                          {record.status}
+                        </span>
+                      ) : (
+                        <span className="category-badge">{record.status}</span>
+                      )}
+                    </div>
+
+                    <h4 className="record-card-title">{record.title}</h4>
+                    <p className="record-card-subtitle">{record.subtitle}</p>
+
+                    <div className="record-card-meta">
+                      <span>📍 {record.location}</span>
+                      {record.date && <span>📅 {record.date}</span>}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <span className="risk-tag green">LOW RISK</span>
-            </div>
-
-            <div className="risk-card-body">
-              <h2>{loading ? "..." : stats.lowRisk || 0}</h2>
-              <p>Standard routine monitoring</p>
-            </div>
-
-            <div className="risk-progress-bar green">
-              <div
-                style={{
-                  width: `${Math.min(
-                    100,
-                    ((stats.lowRisk || 0) /
-                      Math.max(1, stats.totalPlaces || 1)) *
-                      100
-                  )}%`,
-                }}
-              ></div>
-            </div>
+            ))}
           </div>
-        </div>
+        )}
       </section>
 
       {/* MAIN CONTENT: MAP + RECENT ACTIVITY / RECORDS */}
@@ -864,6 +918,129 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* RISK MONITORING SECTION (MOVED TO BOTTOM) */}
+      <section className="dashboard-risk-section">
+        <div className="section-header-strip">
+          <div>
+            <h3 className="section-title-text">Risk Monitoring</h3>
+            <p className="section-subtitle-text">
+              Current distribution of monitored locations
+            </p>
+          </div>
+
+          <div className="filter-station-box">
+            <select
+              className="station-filter-select"
+              value={selectedStation}
+              onChange={(e) => {
+                setSelectedStation(e.target.value);
+                fetchDashboard(e.target.value);
+              }}
+            >
+              <option value="">All Police Stations</option>
+              {policeStations.map((station) => (
+                <option key={station.id} value={station.station_name}>
+                  {station.station_name}
+                </option>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              className="secondary-btn btn-sm"
+              onClick={() => fetchDashboard()}
+              disabled={loading}
+            >
+              <RefreshCcw size={15} />
+              {loading ? "..." : "Refresh"}
+            </button>
+          </div>
+        </div>
+
+        <div className="risk-cards-grid">
+          <div className="risk-card high-risk-card">
+            <div className="risk-card-header">
+              <div className="risk-card-icon red">
+                <ShieldAlert size={20} />
+              </div>
+              <span className="risk-tag red">HIGH RISK</span>
+            </div>
+
+            <div className="risk-card-body">
+              <h2>{loading ? "..." : stats.highRisk || 0}</h2>
+              <p>Locations requiring attention</p>
+            </div>
+
+            <div className="risk-progress-bar red">
+              <div
+                style={{
+                  width: `${Math.min(
+                    100,
+                    ((stats.highRisk || 0) /
+                      Math.max(1, stats.totalPlaces || 1)) *
+                      100
+                  )}%`,
+                }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="risk-card medium-risk-card">
+            <div className="risk-card-header">
+              <div className="risk-card-icon amber">
+                <AlertCircle size={20} />
+              </div>
+              <span className="risk-tag amber">MEDIUM RISK</span>
+            </div>
+
+            <div className="risk-card-body">
+              <h2>{loading ? "..." : stats.mediumRisk || 0}</h2>
+              <p>Moderate supervision required</p>
+            </div>
+
+            <div className="risk-progress-bar amber">
+              <div
+                style={{
+                  width: `${Math.min(
+                    100,
+                    ((stats.mediumRisk || 0) /
+                      Math.max(1, stats.totalPlaces || 1)) *
+                      100
+                  )}%`,
+                }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="risk-card low-risk-card">
+            <div className="risk-card-header">
+              <div className="risk-card-icon green">
+                <ShieldCheck size={20} />
+              </div>
+              <span className="risk-tag green">LOW RISK</span>
+            </div>
+
+            <div className="risk-card-body">
+              <h2>{loading ? "..." : stats.lowRisk || 0}</h2>
+              <p>Standard routine monitoring</p>
+            </div>
+
+            <div className="risk-progress-bar green">
+              <div
+                style={{
+                  width: `${Math.min(
+                    100,
+                    ((stats.lowRisk || 0) /
+                      Math.max(1, stats.totalPlaces || 1)) *
+                      100
+                  )}%`,
+                }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* UNIVERSAL RECORD DETAILS MODAL */}
       <RecordDetailsModal
