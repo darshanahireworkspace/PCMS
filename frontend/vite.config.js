@@ -62,7 +62,12 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
-        navigateFallbackDenylist: [/^\/admin-manifest\.webmanifest$/, /^\/manifest\.webmanifest$/],
+        navigateFallbackDenylist: [
+          /^\/admin/,
+          /^\/admin\.html$/,
+          /^\/admin-manifest\.webmanifest$/,
+          /^\/manifest\.webmanifest$/
+        ],
 
         runtimeCaching: [
           {
