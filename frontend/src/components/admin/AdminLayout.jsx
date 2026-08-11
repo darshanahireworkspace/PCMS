@@ -12,7 +12,11 @@ import {
   Building,
   Home,
   Sliders,
+  Download,
+  Smartphone,
+  Share,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import policeLogo from "../../assets/police-logo.png";
 import "../../pages/admin/AdminPortal.css";
@@ -21,6 +25,34 @@ function AdminLayout() {
   const { adminUser, adminLogout } = useAdminAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showIosModal, setShowIosModal] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  const isIOS =
+    typeof navigator !== "undefined" &&
+    (/iphone|ipad|ipod/i.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
+  // Listen to beforeinstallprompt for Android & Desktop Chrome/Edge
+  useEffect(() => {
+    const installed =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
+    setIsInstalled(installed);
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
 
   // Dynamic route-aware PWA manifest switcher for Admin console
   useEffect(() => {
@@ -36,6 +68,32 @@ function AdminLayout() {
       link.href = "/manifest.webmanifest";
     };
   }, []);
+
+  const handleInstallApp = async () => {
+    if (isInstalled) {
+      toast.success("Chhavani Police Admin App आधीच इन्स्टॉल आहे.");
+      return;
+    }
+
+    if (isIOS) {
+      setShowIosModal(true);
+      return;
+    }
+
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === "accepted") {
+        toast.success("Chhavani Police Admin App यशस्वीरित्या इन्स्टॉल झाले!");
+        setDeferredPrompt(null);
+        setIsInstalled(true);
+      }
+    } else {
+      toast("ब्राऊझर मेनू (⋮) वर जा आणि 'Install App' किंवा 'Add to Home screen' निवडा.", {
+        icon: "📲",
+      });
+    }
+  };
 
   const handleLogout = () => {
     adminLogout();
@@ -89,6 +147,17 @@ function AdminLayout() {
             );
           })}
 
+          {!isInstalled && (
+            <button
+              type="button"
+              className="admin-nav-item install-link"
+              onClick={handleInstallApp}
+            >
+              <Download size={18} />
+              <span>Install Admin App</span>
+            </button>
+          )}
+
           <NavLink
             to="/dashboard"
             className="admin-nav-item command-link"
@@ -132,6 +201,18 @@ function AdminLayout() {
           </div>
 
           <div className="admin-user-profile">
+            {!isInstalled && (
+              <button
+                type="button"
+                className="admin-topbar-install-btn hidden-xs"
+                onClick={handleInstallApp}
+                title="Install Admin PWA App"
+              >
+                <Download size={14} />
+                <span>Install App</span>
+              </button>
+            )}
+
             <div className="admin-user-avatar">
               {(adminUser?.full_name || "S").charAt(0)}
             </div>
@@ -147,6 +228,58 @@ function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* IPHONE SAFARI INSTALL INSTRUCTION MODAL */}
+      {showIosModal && (
+        <div className="modal-overlay">
+          <div className="admin-modal-card p-6" style={{ maxWidth: "420px" }}>
+            <div className="modal-header">
+              <h3 className="flex items-center gap-2">
+                <Smartphone size={18} className="text-teal" />
+                iPhone / Safari वर इन्स्टॉल करा
+              </h3>
+              <button
+                type="button"
+                className="close-btn"
+                onClick={() => setShowIosModal(false)}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="py-3 text-left">
+              <p className="text-sm text-slate-300 mb-3">
+                iPhone वर <b>Chhavani Police Admin App</b> इन्स्टॉल करण्यासाठी खालील सोप्या पायऱ्या वापरा:
+              </p>
+
+              <div className="ios-instructions-box">
+                <div className="ios-step">
+                  <span className="step-num">1</span>
+                  <span>Safari ब्राऊझर मध्ये खालील <b>Share (शेअर) <Share size={14} className="inline text-teal" /></b> बटणावर क्लिक करा.</span>
+                </div>
+
+                <div className="ios-step">
+                  <span className="step-num">2</span>
+                  <span>खाली स्क्रोल करून <b>'Add to Home Screen' (होम स्क्रीनवर जोडा)</b> पर्याय निवडा.</span>
+                </div>
+
+                <div className="ios-step">
+                  <span className="step-num">3</span>
+                  <span>उजव्या कोपऱ्यात <b>'Add' (जोडा)</b> वर क्लिक करा.</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="primary-btn w-full justify-center mt-2"
+              onClick={() => setShowIosModal(false)}
+            >
+              समजले (Got it)
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
