@@ -1,7 +1,57 @@
 {
+  "headers": [
+    {
+      "source": "/(.*)\\.webmanifest",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Content-Type", "value": "application/manifest+json" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Content-Type", "value": "application/manifest+json" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/admin-manifest.webmanifest",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Content-Type", "value": "application/manifest+json" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ],
   "rewrites": [
     {
-      "source": "/((?!manifest\\.webmanifest|admin-manifest\\.webmanifest|sw\\.js|registerSW\\.js|favicon\\.ico|police-logo\\.png|icon-192\\.png|icon-512\\.png|assets/|.*\\.[a-zA-Z0-9]+$).*)",
+      "source": "/admin-manifest.webmanifest",
+      "destination": "/admin-manifest.webmanifest"
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "destination": "/manifest.webmanifest"
+    },
+    {
+      "source": "/sw.js",
+      "destination": "/sw.js"
+    },
+    {
+      "source": "/workbox-(.*)",
+      "destination": "/workbox-$1"
+    },
+    {
+      "source": "/registerSW.js",
+      "destination": "/registerSW.js"
+    },
+    {
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/((?!admin-manifest\\.webmanifest|manifest\\.webmanifest|sw\\.js|workbox-.*|registerSW\\.js|favicon\\.ico|police-logo\\.png|icon-192\\.png|icon-512\\.png|assets/|.*\\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }
   ]
