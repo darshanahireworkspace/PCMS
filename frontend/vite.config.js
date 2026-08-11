@@ -12,8 +12,8 @@ export default defineConfig({
       manifest: {
         id: "/",
 
-        name: "Police City Management System",
-        short_name: "PCMS",
+        name: "छावणी पोलीस",
+        short_name: "छावणी पोलीस",
         description: "Police City Religious and Festival Management System",
 
         start_url: "/",
