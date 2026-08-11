@@ -37,16 +37,38 @@ const generateJwt = async (payload: Record<string, unknown>, secret: string): Pr
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { status: 200, headers: corsHeaders });
   }
 
-  const url = new URL(req.url);
-  const path = url.pathname;
-
   try {
-    // 1. ADMIN LOGIN ROUTE (POST /admin-auth/login or POST /admin-auth)
-    if (req.method === "POST" && (path.endsWith("/login") || path.endsWith("/admin-auth") || path.includes("/login"))) {
-      const body = await req.json();
+    const url = new URL(req.url);
+    const path = url.pathname;
+
+    // GET /me route for profile verification
+    if (req.method === "GET" && path.includes("/me")) {
+      const authUser = await verifyOfficerToken(req);
+      if (!authUser || authUser.username !== "SPMalegaon") {
+        return sendError("Unauthorized access", null, 401);
+      }
+
+      return sendSuccess("Admin profile retrieved", {
+        id: authUser.id,
+        full_name: authUser.full_name || "Superintendent of Police Malegaon",
+        username: "SPMalegaon",
+        role: "SuperAdmin",
+        access_scope: "ALL",
+      });
+    }
+
+    // ALL POST REQUESTS TO ADMIN-AUTH FUNCTION ARE TREATED AS ADMIN LOGIN
+    if (req.method === "POST") {
+      let body: any = {};
+      try {
+        body = await req.json();
+      } catch {
+        body = {};
+      }
+
       const cleanUsername = String(body.username || "").trim();
       const cleanPassword = String(body.password || "").trim();
 
@@ -144,22 +166,6 @@ serve(async (req: Request) => {
           access_scope: "ALL",
           police_station: adminOfficer?.police_station_name || "Malegaon Headquarters",
         },
-      });
-    }
-
-    // 2. ME ROUTE (GET /admin-auth/me)
-    if (req.method === "GET" && path.endsWith("/me")) {
-      const authUser = await verifyOfficerToken(req);
-      if (!authUser || authUser.username !== "SPMalegaon") {
-        return sendError("Unauthorized access", null, 401);
-      }
-
-      return sendSuccess("Admin profile retrieved", {
-        id: authUser.id,
-        full_name: authUser.full_name || "Superintendent of Police Malegaon",
-        username: "SPMalegaon",
-        role: "SuperAdmin",
-        access_scope: "ALL",
       });
     }
 

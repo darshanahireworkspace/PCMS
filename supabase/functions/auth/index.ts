@@ -37,7 +37,7 @@ const generateJwt = async (payload: Record<string, unknown>, secret: string): Pr
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { status: 200, headers: corsHeaders });
   }
 
   const url = new URL(req.url);
@@ -45,8 +45,14 @@ serve(async (req: Request) => {
 
   try {
     // 1. OFFICER LOGIN ROUTE (POST /auth/login or POST /auth)
-    if (req.method === "POST" && (path.endsWith("/login") || path.endsWith("/auth"))) {
-      const body = await req.json();
+    if (req.method === "POST") {
+      let body: any = {};
+      try {
+        body = await req.json();
+      } catch {
+        body = {};
+      }
+
       const cleanUsername = String(body.username || "").trim();
       const cleanPassword = String(body.password || "").trim();
 
