@@ -4,12 +4,13 @@ import {
   Download,
   Printer,
   Search,
-  CalendarDays,
-  MapPin,
-  ShieldAlert,
-  Store,
   FileSpreadsheet,
-  CheckCircle2,
+  Check,
+  ChevronRight,
+  ShieldAlert,
+  CalendarCheck,
+  Church,
+  Building2,
   Filter,
 } from "lucide-react";
 import toast from "react-hot-toast";
@@ -348,7 +349,15 @@ function Reports() {
       return;
     }
 
-    const headers = ["Record Type", "Name", "Category / Type", "Area", "Status / Risk", "Contact Person", "Mobile"];
+    const headers = [
+      "Record Type",
+      "Name",
+      "Category / Type",
+      "Area",
+      "Status / Risk",
+      "Contact Person",
+      "Mobile",
+    ];
     const csvRows = filteredRows.map((r) => [
       `"${r.recordType || ""}"`,
       `"${r.name || ""}"`,
@@ -359,7 +368,10 @@ function Reports() {
       `"${r.mobile || ""}"`,
     ]);
 
-    const csvContent = [headers.join(","), ...csvRows.map((row) => row.join(","))].join("\n");
+    const csvContent = [
+      headers.join(","),
+      ...csvRows.map((row) => row.join(",")),
+    ].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 
@@ -377,7 +389,15 @@ function Reports() {
       return;
     }
 
-    const headers = ["Record Type", "Name", "Category / Type", "Area", "Status / Risk", "Contact Person", "Mobile"];
+    const headers = [
+      "Record Type",
+      "Name",
+      "Category / Type",
+      "Area",
+      "Status / Risk",
+      "Contact Person",
+      "Mobile",
+    ];
     const tsvRows = filteredRows.map((r) => [
       r.recordType || "",
       r.name || "",
@@ -388,8 +408,13 @@ function Reports() {
       r.mobile || "",
     ]);
 
-    const tsvContent = [headers.join("\t"), ...tsvRows.map((row) => row.join("\t"))].join("\n");
-    const blob = new Blob([tsvContent], { type: "application/vnd.ms-excel;charset=utf-8;" });
+    const tsvContent = [
+      headers.join("\t"),
+      ...tsvRows.map((row) => row.join("\t")),
+    ].join("\n");
+    const blob = new Blob([tsvContent], {
+      type: "application/vnd.ms-excel;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
@@ -400,183 +425,203 @@ function Reports() {
     toast.success(`Exported ${filteredRows.length} records to Excel`);
   };
 
+  const quickReports = [
+    {
+      id: "all",
+      title: "All Records",
+      subtitle: "Complete city management report",
+      count: totalCount,
+      icon: FileText,
+      colorClass: "blue",
+    },
+    {
+      id: "places",
+      title: "Religious Places",
+      subtitle: "Registered religious locations",
+      count: places.length,
+      icon: Church,
+      colorClass: "teal",
+    },
+    {
+      id: "festivals",
+      title: "Festival Permissions",
+      subtitle: "Festival and permission records",
+      count: festivals.length,
+      icon: CalendarCheck,
+      colorClass: "purple",
+    },
+    {
+      id: "other",
+      title: "Other Places",
+      subtitle: "Commercial and civic records",
+      count: otherPlaces.length,
+      icon: Building2,
+      colorClass: "emerald",
+    },
+    {
+      id: "high",
+      title: "High Risk Locations",
+      subtitle: "Security priority monitoring",
+      count: highRisk.length,
+      icon: ShieldAlert,
+      colorClass: "red",
+    },
+  ];
+
   return (
-    <div className="reports-page-container">
-      {/* PAGE HEADER */}
-      <div className="reports-header-card">
-        <div className="reports-header-title">
-          <FileText size={28} className="header-icon-teal" />
+    <div className="reports-redesign-container">
+      {/* 1. COMPACT PAGE HEADER */}
+      <div className="reports-header-block">
+        <div className="reports-header-left">
+          <div className="reports-header-icon-box">
+            <FileText size={22} />
+          </div>
           <div>
-            <h2>Reports & Export Center</h2>
-            <p>Generate official police management reports and export live city records</p>
+            <h2 className="reports-page-title">Reports</h2>
+            <p className="reports-page-subtitle">
+              Generate and view system reports
+            </p>
           </div>
         </div>
 
-        <div className="reports-actions-bar">
-          <button type="button" className="secondary-btn" onClick={handlePrint}>
-            <Printer size={16} />
-            Print Report
+        <div className="reports-header-actions">
+          <button
+            type="button"
+            className="secondary-btn btn-sm"
+            onClick={handleExportExcel}
+          >
+            <FileSpreadsheet size={15} />
+            Excel
           </button>
-          <button type="button" className="secondary-btn" onClick={handleExportExcel}>
-            <FileSpreadsheet size={16} />
-            Export Excel
+          <button
+            type="button"
+            className="secondary-btn btn-sm"
+            onClick={handleExportCSV}
+          >
+            <Download size={15} />
+            CSV
           </button>
-          <button type="button" className="primary-btn" onClick={handleExportCSV}>
-            <Download size={16} />
-            Export CSV
+          <button
+            type="button"
+            className="primary-btn btn-sm"
+            onClick={handlePrint}
+          >
+            <Printer size={15} />
+            Print / PDF
           </button>
         </div>
       </div>
 
-      {/* KPI SUMMARY CARDS */}
-      <div className="reports-kpi-grid">
-        <div className="reports-kpi-card blue">
-          <FileText size={22} />
-          <div>
-            <h3>{loading ? "..." : totalCount}</h3>
-            <span>Total City Records</span>
+      {/* 2. QUICK REPORTS SELECTION SECTION */}
+      <div className="reports-quick-section">
+        <div className="reports-section-title">
+          <h3>Quick Reports</h3>
+          <p>Choose a report category to get started</p>
+        </div>
+
+        <div className="reports-quick-list">
+          {quickReports.map((item) => {
+            const IconComponent = item.icon;
+            const isSelected = reportType === item.id;
+
+            return (
+              <div
+                key={item.id}
+                className={`report-select-row ${isSelected ? "selected" : ""}`}
+                onClick={() => setReportType(item.id)}
+              >
+                <div className="report-row-left">
+                  <div className={`report-row-icon ${item.colorClass}`}>
+                    <IconComponent size={18} />
+                  </div>
+                  <div>
+                    <h4 className="report-row-title">{item.title}</h4>
+                    <p className="report-row-subtitle">{item.subtitle}</p>
+                  </div>
+                </div>
+
+                <div className="report-row-right">
+                  <span className="report-row-badge">
+                    {loading ? "..." : item.count} records
+                  </span>
+                  {isSelected ? (
+                    <Check size={18} className="selected-check-icon" />
+                  ) : (
+                    <ChevronRight size={18} className="chevron-icon" />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 3. REPORT FILTERS BAR */}
+      <div className="reports-filter-card">
+        <div className="reports-section-title">
+          <div className="title-with-icon">
+            <Filter size={16} />
+            <h3>Report Filters</h3>
           </div>
         </div>
 
-        <div className="reports-kpi-card teal">
-          <MapPin size={22} />
-          <div>
-            <h3>{loading ? "..." : places.length}</h3>
-            <span>Religious Places</span>
+        <div className="reports-filters-grid">
+          <div className="reports-search-box">
+            <Search size={18} className="gis-search-icon" />
+            <VoiceField
+              name="searchText"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Search report by name, area, type..."
+            />
           </div>
-        </div>
 
-        <div className="reports-kpi-card amber">
-          <CalendarDays size={22} />
-          <div>
-            <h3>{loading ? "..." : festivals.length}</h3>
-            <span>Festival Permissions</span>
-          </div>
-        </div>
-
-        <div className="reports-kpi-card emerald">
-          <Store size={22} />
-          <div>
-            <h3>{loading ? "..." : otherPlaces.length}</h3>
-            <span>Other City Data</span>
-          </div>
-        </div>
-
-        <div className="reports-kpi-card red">
-          <ShieldAlert size={22} />
-          <div>
-            <h3>{loading ? "..." : highRisk.length}</h3>
-            <span>High Risk Locations</span>
+          <div className="reports-select-box">
+            <select
+              className="reports-select-field"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="All">All Status / Risk Levels</option>
+              <option value="Approved">Approved</option>
+              <option value="Pending">Pending</option>
+              <option value="High">High Risk</option>
+              <option value="Medium">Medium Risk</option>
+              <option value="Low">Low Risk</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {/* EXPORT DATA TYPE SELECTOR */}
-      <div className="reports-filter-section">
-        <div className="section-label-row">
-          <Filter size={16} />
-          <span>EXPORT DATA FILTER</span>
+      {/* 4. REPORT SUMMARY & ACTION STRIP */}
+      <div className="reports-summary-banner">
+        <div className="summary-banner-info">
+          <div>
+            <span className="summary-banner-label">Report Type:</span>
+            <b>{getReportTitle()}</b>
+          </div>
+          <div>
+            <span className="summary-banner-label">Filtered Records:</span>
+            <b>{filteredRows.length} of {totalCount}</b>
+          </div>
         </div>
 
-        <div className="report-type-pills">
+        <div className="summary-banner-actions">
           <button
             type="button"
-            className={`report-pill ${reportType === "all" ? "active" : ""}`}
-            onClick={() => setReportType("all")}
+            className="primary-btn btn-sm"
+            onClick={handlePrint}
           >
-            {reportType === "all" && <CheckCircle2 size={15} />}
-            ALL RECORDS ({totalCount})
-          </button>
-
-          <button
-            type="button"
-            className={`report-pill ${reportType === "places" ? "active" : ""}`}
-            onClick={() => setReportType("places")}
-          >
-            {reportType === "places" && <CheckCircle2 size={15} />}
-            RELIGIOUS PLACES ({places.length})
-          </button>
-
-          <button
-            type="button"
-            className={`report-pill ${reportType === "festivals" ? "active" : ""}`}
-            onClick={() => setReportType("festivals")}
-          >
-            {reportType === "festivals" && <CheckCircle2 size={15} />}
-            FESTIVAL PERMISSIONS ({festivals.length})
-          </button>
-
-          <button
-            type="button"
-            className={`report-pill ${reportType === "other" ? "active" : ""}`}
-            onClick={() => setReportType("other")}
-          >
-            {reportType === "other" && <CheckCircle2 size={15} />}
-            OTHER PLACES ({otherPlaces.length})
-          </button>
-
-          <button
-            type="button"
-            className={`report-pill red ${reportType === "high" ? "active" : ""}`}
-            onClick={() => setReportType("high")}
-          >
-            {reportType === "high" && <CheckCircle2 size={15} />}
-            HIGH RISK ({highRisk.length})
-          </button>
-
-          <button
-            type="button"
-            className={`report-pill amber ${reportType === "pending" ? "active" : ""}`}
-            onClick={() => setReportType("pending")}
-          >
-            {reportType === "pending" && <CheckCircle2 size={15} />}
-            PENDING ({pendingFestivals.length})
+            <Printer size={15} />
+            Generate Report
           </button>
         </div>
       </div>
 
-      {/* SECONDARY TOOLBAR: SEARCH & STATUS */}
-      <div className="reports-toolbar">
-        <div className="reports-search-box">
-          <Search size={18} className="search-icon-teal" />
-          <VoiceField
-            name="searchText"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search report by name, area, type, contact..."
-          />
-        </div>
-
-        <div className="reports-secondary-controls">
-          <select
-            className="reports-select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="All">All Status / Risk</option>
-            <option value="Approved">Approved</option>
-            <option value="Pending">Pending</option>
-            <option value="High">High Risk</option>
-            <option value="Medium">Medium Risk</option>
-            <option value="Low">Low Risk</option>
-          </select>
-        </div>
-      </div>
-
-      {/* REPORT SUMMARY BADGE */}
-      <div className="reports-export-summary">
-        <div>
-          <b>Selected Report:</b> {getReportTitle()}
-        </div>
-        <div>
-          <b>Matching Records:</b> {filteredRows.length} of {totalCount}
-        </div>
-      </div>
-
-      {/* REPORT PREVIEW TABLE */}
+      {/* 5. REPORT PREVIEW TABLE */}
       <div className="reports-preview-card" id="reports-print-table-area">
         <div className="preview-card-header">
-          <h3>{getReportTitle()}</h3>
+          <h3>Report Preview</h3>
           <span className="preview-count-chip">{filteredRows.length} Rows</span>
         </div>
 
@@ -600,8 +645,8 @@ function Reports() {
                   <td colSpan="7" className="text-center py-8">
                     <div className="empty-report-state">
                       <FileText size={36} className="text-muted mb-2" />
-                      <h4>No report records found</h4>
-                      <p>Try changing the selected filters or search text.</p>
+                      <h4>No records available</h4>
+                      <p>Try changing the selected report category or filters.</p>
                     </div>
                   </td>
                 </tr>
@@ -611,7 +656,9 @@ function Reports() {
                     <td>
                       <span className="record-type-chip">{item.recordType}</span>
                     </td>
-                    <td><b>{item.name}</b></td>
+                    <td>
+                      <b>{item.name}</b>
+                    </td>
                     <td>{item.category}</td>
                     <td>{item.area}</td>
                     <td>
