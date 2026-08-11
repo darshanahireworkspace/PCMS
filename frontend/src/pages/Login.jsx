@@ -19,12 +19,14 @@ import toast from "react-hot-toast";
 
 import { loginOfficerApi } from "../api/authApi";
 import useAuth from "../hooks/useAuth";
+import { useAdminAuth } from "../context/AdminAuthContext";
 import policeLogo from "../assets/police-logo.png";
 
 function Login() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const { login } = useAuth();
+  const { adminLogin } = useAdminAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -89,12 +91,19 @@ function Login() {
       return;
     }
 
-    toast.error(
-      "Tap browser menu (⋮) and select 'Install App' or 'Add to Home Screen'."
+    toast("To install app, open browser menu and select 'Add to Home screen'", {
+      icon: "ℹ️",
+    });
+  };
+
+  const handleLanguageChange = (lang) => {
+    i18n.changeLanguage(lang);
+    toast.success(
+      lang === "mr" ? "भाषा मराठी निवडली" : "Language set to English"
     );
   };
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const cleanUsername = username.trim();
@@ -118,6 +127,15 @@ function Login() {
       const token = responsePayload?.token || res.data?.token;
 
       if (token && officerData) {
+        // If logged in as SuperAdmin or Admin, direct to Super Admin Console
+        if (officerData.role === "SuperAdmin" || officerData.role === "Admin") {
+          adminLogin(token, officerData);
+          toast.success(`Welcome to Admin Console, ${officerData.full_name || "Super Admin"}`);
+          navigate("/admin/dashboard", { replace: true });
+          return;
+        }
+
+        // Regular officer login
         login(token, officerData);
         toast.success("Login successful");
         navigate("/dashboard", { replace: true });
@@ -179,62 +197,67 @@ function Login() {
                 <ShieldCheck size={14} />
                 <span>SECURE OFFICER PORTAL</span>
               </div>
-              <div className="card-logo-container">
-                <img src={policeLogo} alt="Police Crest" />
+
+              {/* Language Switcher */}
+              <div className="lang-toggle-group">
+                <Languages size={14} className="lang-icon" />
+                <button
+                  type="button"
+                  className={`lang-btn ${i18n.language === "mr" ? "active" : ""}`}
+                  onClick={() => handleLanguageChange("mr")}
+                >
+                  मराठी
+                </button>
+                <span className="lang-divider">|</span>
+                <button
+                  type="button"
+                  className={`lang-btn ${i18n.language === "en" ? "active" : ""}`}
+                  onClick={() => handleLanguageChange("en")}
+                >
+                  ENG
+                </button>
               </div>
             </div>
 
-            <div className="card-title-block">
-              <h3>{t("officerLogin") || "Officer Sign In"}</h3>
-              <p>Chhavani Police Station, Malegaon</p>
+            <div className="card-logo-container">
+              <img src={policeLogo} alt="Logo" />
+              <h3>छावणी पोलिस स्टेशन</h3>
+              <p>पोलीस अधिकारी लॉगिन सिस्टीम</p>
             </div>
 
-            <div className="login-language-bar">
-              <Languages size={15} className="lang-icon" />
-              <select
-                value={i18n.language}
-                onChange={(e) => i18n.changeLanguage(e.target.value)}
-                aria-label="Select Language"
-              >
-                <option value="mr">मराठी</option>
-                <option value="hi">हिंदी</option>
-                <option value="en">English</option>
-              </select>
-            </div>
-
-            <form onSubmit={handleLogin} className="login-form-v2" autoComplete="off">
-              <div className="input-field-wrapper">
-                <label htmlFor="login-username">{t("username") || "Username"}</label>
-                <div className="input-inner">
-                  <User size={18} className="field-icon" />
+            <form onSubmit={handleSubmit} className="login-form-v2" autoComplete="off">
+              <div className="form-group-v2">
+                <label htmlFor="username">{t("login.username")} *</label>
+                <div className="input-with-icon-v2">
+                  <User size={18} className="field-icon-v2" />
                   <input
-                    id="login-username"
+                    id="username"
                     type="text"
-                    placeholder="Enter officer username..."
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    required
+                    placeholder="Enter mobile or username..."
                     autoComplete="off"
+                    required
                   />
                 </div>
               </div>
 
-              <div className="input-field-wrapper">
-                <label htmlFor="login-password">{t("password") || "Password"}</label>
-                <div className="input-inner">
-                  <Lock size={18} className="field-icon" />
+              <div className="form-group-v2">
+                <label htmlFor="password">{t("login.password")} *</label>
+                <div className="input-with-icon-v2">
+                  <Lock size={18} className="field-icon-v2" />
                   <input
-                    id="login-password"
+                    id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter password..."
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
+                    placeholder="Enter password..."
                     autoComplete="off"
+                    required
                   />
                   <button
                     type="button"
-                    className="eye-toggle-btn"
+                    className="password-toggle-v2"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
@@ -244,47 +267,59 @@ function Login() {
               </div>
 
               <button
-                className="submit-login-btn"
                 type="submit"
+                className="login-submit-btn-v2"
                 disabled={loading}
               >
-                {loading ? "Verifying Credentials..." : t("signIn") || "Sign In to Command Center"}
+                {loading ? (
+                  t("login.logging_in")
+                ) : (
+                  <>
+                    <ShieldCheck size={18} />
+                    {t("login.sign_in")}
+                  </>
+                )}
               </button>
-
-              {!isInstalled && (
-                <button
-                  type="button"
-                  className="pwa-install-btn"
-                  onClick={handleInstallApp}
-                >
-                  <Download size={17} />
-                  Install PWA Application
-                </button>
-              )}
             </form>
 
-            <div className="card-footer-notice">
-              Authorized Police Personnel Only • Session Monitored
+            {/* INSTALL PWA BUTTON */}
+            {!isInstalled && (
+              <div className="install-banner-v2">
+                <button
+                  type="button"
+                  className="install-pwa-btn-v2"
+                  onClick={handleInstallApp}
+                >
+                  <Download size={16} />
+                  <span>
+                    {i18n.language === "mr"
+                      ? "ॲप मोबाईलमध्ये इन्स्टॉल करा (PWA)"
+                      : "Install Officer App (PWA)"}
+                  </span>
+                </button>
+              </div>
+            )}
+
+            <div className="login-card-footer">
+              <p>© 2026 Maharashtra Police • All Rights Reserved</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* iOS SAFARI INSTALL INSTRUCTION MODAL */}
+      {/* iOS INSTALL INSTRUCTIONS MODAL */}
       {showIosModal && (
-        <div
-          className="ios-modal-overlay"
-          onClick={() => setShowIosModal(false)}
-        >
-          <div
-            className="ios-modal-card"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-overlay">
+          <div className="ios-install-modal">
             <div className="ios-modal-header">
-              <h3>Install on iPhone / iPad</h3>
+              <h3>
+                {i18n.language === "mr"
+                  ? "iPhone वर इन्स्टॉल करा"
+                  : "Install on iPhone"}
+              </h3>
               <button
                 type="button"
-                className="close-modal-btn"
+                className="close-btn"
                 onClick={() => setShowIosModal(false)}
               >
                 <X size={18} />
@@ -292,36 +327,76 @@ function Login() {
             </div>
 
             <div className="ios-modal-body">
-              <p className="ios-intro-text">
-                iOS Safari requires a quick manual step to add the Police App to your Home Screen:
+              <p className="ios-intro">
+                {i18n.language === "mr"
+                  ? "ॲप इन्स्टॉल करण्यासाठी खालील पायऱ्या वापरा:"
+                  : "Follow these steps to install the app:"}
               </p>
 
-              <div className="ios-step-row">
-                <span className="step-number">1</span>
-                <p>Ensure you are viewing this page in <b>Safari</b> browser.</p>
+              <div className="ios-step-item">
+                <div className="step-badge">1</div>
+                <div className="step-text">
+                  <span>
+                    {i18n.language === "mr"
+                      ? "खालील Safari मेनूमध्ये "
+                      : "Tap the "}
+                  </span>
+                  <strong>
+                    {i18n.language === "mr" ? "शेअर (Share)" : "Share"}
+                  </strong>
+                  <Share size={16} className="inline-icon" />
+                  <span>
+                    {i18n.language === "mr"
+                      ? " बटणावर क्लिक करा."
+                      : " button in Safari."}
+                  </span>
+                </div>
               </div>
 
-              <div className="ios-step-row">
-                <span className="step-number">2</span>
-                <p>
-                  Tap the <b>Share</b> button <Share size={15} className="inline-icon" /> at the bottom of Safari.
-                </p>
+              <div className="ios-step-item">
+                <div className="step-badge">2</div>
+                <div className="step-text">
+                  <span>
+                    {i18n.language === "mr" ? "मेनूमध्ये " : "Select "}
+                  </span>
+                  <strong>
+                    {i18n.language === "mr"
+                      ? "'Add to Home Screen' (होम स्क्रीनवर जोडा)"
+                      : "'Add to Home Screen'"}
+                  </strong>
+                  <PlusSquare size={16} className="inline-icon" />
+                  <span>
+                    {i18n.language === "mr"
+                      ? " पर्याय निवडा."
+                      : " option."}
+                  </span>
+                </div>
               </div>
 
-              <div className="ios-step-row">
-                <span className="step-number">3</span>
-                <p>
-                  Scroll down and select <b>"Add to Home Screen"</b> <PlusSquare size={15} className="inline-icon" />.
-                </p>
+              <div className="ios-step-item">
+                <div className="step-badge">3</div>
+                <div className="step-text">
+                  <span>
+                    {i18n.language === "mr"
+                      ? "उजव्या कोपऱ्यातील "
+                      : "Tap "}
+                  </span>
+                  <strong>{i18n.language === "mr" ? "'Add' (जोडा)" : "'Add'"}</strong>
+                  <span>
+                    {i18n.language === "mr"
+                      ? " बटणावर क्लिक करा."
+                      : " in the top right."}
+                  </span>
+                </div>
               </div>
             </div>
 
             <button
               type="button"
-              className="primary-btn btn-full mt-4"
+              className="ios-modal-confirm-btn"
               onClick={() => setShowIosModal(false)}
             >
-              Got It
+              {i18n.language === "mr" ? "समजले (Got it)" : "Got it"}
             </button>
           </div>
         </div>

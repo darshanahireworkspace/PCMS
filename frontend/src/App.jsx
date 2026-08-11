@@ -30,13 +30,24 @@ import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import useAuth from "./hooks/useAuth";
+import { useAdminAuth } from "./context/AdminAuthContext";
 
 function PublicOnlyRoute({ children }) {
   const { officer, loading } = useAuth();
+  const { adminUser } = useAdminAuth();
+
   if (loading) return null;
+
+  // If logged in as SuperAdmin/Admin, isolate and route to Super Admin dashboard
+  if (adminUser) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  // If logged in as regular officer, route to Command App dashboard
   if (officer) {
     return <Navigate to="/dashboard" replace />;
   }
+
   return children;
 }
 

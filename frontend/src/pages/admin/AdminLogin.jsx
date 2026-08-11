@@ -57,16 +57,17 @@ function AdminLogin() {
 
   // Dynamic route-aware PWA manifest switcher for Admin console
   useEffect(() => {
-    let link = document.querySelector('link[rel="manifest"]');
+    let link = document.getElementById("app-manifest");
     if (!link) {
       link = document.createElement("link");
+      link.id = "app-manifest";
       link.rel = "manifest";
       document.head.appendChild(link);
     }
-    link.href = "/admin-manifest.webmanifest";
+    link.setAttribute("href", "/admin-manifest.webmanifest");
 
     return () => {
-      link.href = "/manifest.webmanifest";
+      link.setAttribute("href", "/manifest.webmanifest");
     };
   }, []);
 
