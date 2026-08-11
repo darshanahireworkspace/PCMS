@@ -12,20 +12,34 @@ import {
   Sliders,
   CopyCheck,
   FileText,
+  Search,
+  Eye,
+  Database,
+  Filter,
 } from "lucide-react";
 import toast from "react-hot-toast";
+
 import { getOfficers } from "../../api/officerApi";
 import { getTeams } from "../../api/teamsApi";
-import { getDashboardStats } from "../../api/dashboardApi";
+import { getReligiousPlaces } from "../../api/religiousPlaceApi";
+import { getFestivalPermissions } from "../../api/festivalApi";
+import { getOtherPlaces } from "../../api/otherPlaceApi";
 import { useAdminAuth } from "../../context/AdminAuthContext";
+import RecordDetailsModal from "../../components/common/RecordDetailsModal";
 import "./AdminPortal.css";
 
 function AdminDashboard() {
   const { adminUser } = useAdminAuth();
   const [officers, setOfficers] = useState([]);
   const [teams, setTeams] = useState([]);
-  const [stats, setStats] = useState({});
+  const [religiousPlaces, setReligiousPlaces] = useState([]);
+  const [festivalPermissions, setFestivalPermissions] = useState([]);
+  const [otherPlaces, setOtherPlaces] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRecord, setSelectedRecord] = useState(null);
 
   const loadData = async () => {
     try {
@@ -34,7 +48,9 @@ function AdminDashboard() {
       const results = await Promise.allSettled([
         getOfficers(),
         getTeams(),
-        getDashboardStats(),
+        getReligiousPlaces(),
+        getFestivalPermissions(),
+        getOtherPlaces(),
       ]);
 
       if (results[0].status === "fulfilled") {
@@ -44,7 +60,13 @@ function AdminDashboard() {
         setTeams(results[1].value.data?.data || []);
       }
       if (results[2].status === "fulfilled") {
-        setStats(results[2].value.data?.data?.stats || {});
+        setReligiousPlaces(results[2].value.data?.data || []);
+      }
+      if (results[3].status === "fulfilled") {
+        setFestivalPermissions(results[3].value.data?.data || []);
+      }
+      if (results[4].status === "fulfilled") {
+        setOtherPlaces(results[4].value.data?.data || []);
       }
     } catch (err) {
       console.error("Admin dashboard load error:", err);
@@ -58,11 +80,81 @@ function AdminDashboard() {
     loadData();
   }, []);
 
+  const officerMap = new Map(officers.map((o) => [o.id, o.full_name || o.username]));
+
+  const getOfficerName = (createdById) => {
+    if (!createdById) return "Super Admin";
+    return officerMap.get(createdById) || "Registered Officer";
+  };
+
   const activeOfficers = officers.filter((o) => o.status === "Active");
-  const totalRecords =
-    (stats.totalPlaces || 0) +
-    (stats.festivalPermissions || 0) +
-    (stats.otherPlaces || 0);
+  const totalRecords = religiousPlaces.length + festivalPermissions.length + otherPlaces.length;
+
+  const combinedRecords = [
+    ...religiousPlaces.map((item) => ({
+      ...item,
+      recordCategory: "places",
+      categoryLabel: "Religious Place",
+      categoryColor: "teal",
+      name: item.place_name,
+      subtitle: `${item.place_type || "-"} • ${item.area || "-"}`,
+      creatorName: getOfficerName(item.created_by),
+      status: item.risk_level || "Low",
+      statusType: "risk",
+      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : "-",
+      raw: item,
+    })),
+    ...festivalPermissions.map((item) => ({
+      ...item,
+      recordCategory: "festivals",
+      categoryLabel: "Festival Permit",
+      categoryColor: "amber",
+      name: item.organizer_name || item.festival_name || item.president_name || "Festival Permit",
+      subtitle: `${item.festival_name || "-"} • ${item.area || "-"}`,
+      creatorName: getOfficerName(item.created_by || item.assigned_officer),
+      status: item.permission_status || "Pending",
+      statusType: "permission",
+      date: item.start_date || (item.created_at ? new Date(item.created_at).toLocaleDateString() : "-"),
+      raw: item,
+    })),
+    ...otherPlaces.map((item) => ({
+      ...item,
+      recordCategory: "other",
+      categoryLabel: "Other Place",
+      categoryColor: "emerald",
+      name: item.place_name,
+      subtitle: `${item.category || "-"} • ${item.area || "-"}`,
+      creatorName: getOfficerName(item.created_by),
+      status: item.category || "General",
+      statusType: "category",
+      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : "-",
+      raw: item,
+    })),
+  ];
+
+  const filteredRecords = combinedRecords.filter((record) => {
+    if (activeTab !== "all" && record.recordCategory !== activeTab) {
+      return false;
+    }
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+
+    return (
+      record.name?.toLowerCase().includes(q) ||
+      record.subtitle?.toLowerCase().includes(q) ||
+      record.creatorName?.toLowerCase().includes(q) ||
+      record.area?.toLowerCase().includes(q)
+    );
+  });
+
+  const openRecordModal = (record) => {
+    setSelectedRecord({
+      ...record.raw,
+      recordType: record.categoryLabel,
+      title: record.name,
+      subtitle: record.subtitle,
+    });
+  };
 
   return (
     <div className="admin-page-container">
@@ -167,7 +259,7 @@ function AdminDashboard() {
           <div className="admin-kpi-card teal">
             <MapPin size={24} />
             <div>
-              <h3>{loading ? "..." : stats.totalPlaces || 0}</h3>
+              <h3>{loading ? "..." : religiousPlaces.length}</h3>
               <span>Religious Places</span>
             </div>
           </div>
@@ -175,7 +267,7 @@ function AdminDashboard() {
           <div className="admin-kpi-card amber">
             <CalendarCheck size={24} />
             <div>
-              <h3>{loading ? "..." : stats.festivalPermissions || 0}</h3>
+              <h3>{loading ? "..." : festivalPermissions.length}</h3>
               <span>Festival Permits</span>
             </div>
           </div>
@@ -183,12 +275,132 @@ function AdminDashboard() {
           <div className="admin-kpi-card emerald">
             <Building size={24} />
             <div>
-              <h3>{loading ? "..." : stats.otherPlaces || 0}</h3>
+              <h3>{loading ? "..." : otherPlaces.length}</h3>
               <span>Other Places</span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* SUPER ADMIN GLOBAL DATA VISIBILITY SECTION */}
+      <div className="admin-section-block">
+        <div className="section-title-sm">
+          <Database size={16} />
+          <span>ALL REGISTERED CITY DATA (GLOBAL OFFICER DATA STREAM)</span>
+        </div>
+
+        <div className="admin-data-filter-bar">
+          <div className="admin-tab-buttons">
+            <button
+              type="button"
+              className={activeTab === "all" ? "active" : ""}
+              onClick={() => setActiveTab("all")}
+            >
+              All ({totalRecords})
+            </button>
+            <button
+              type="button"
+              className={activeTab === "places" ? "active" : ""}
+              onClick={() => setActiveTab("places")}
+            >
+              Religious Places ({religiousPlaces.length})
+            </button>
+            <button
+              type="button"
+              className={activeTab === "festivals" ? "active" : ""}
+              onClick={() => setActiveTab("festivals")}
+            >
+              Festival Permits ({festivalPermissions.length})
+            </button>
+            <button
+              type="button"
+              className={activeTab === "other" ? "active" : ""}
+              onClick={() => setActiveTab("other")}
+            >
+              Other Places ({otherPlaces.length})
+            </button>
+          </div>
+
+          <div className="admin-search-box">
+            <Search size={16} />
+            <input
+              type="text"
+              placeholder="Search by name, officer, or area..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="admin-table-wrapper">
+          <table className="admin-data-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Name / Mandal</th>
+                <th>Sub-details / Area</th>
+                <th>Created By Officer</th>
+                <th>Status / Risk</th>
+                <th>Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-4">
+                    Loading global registered data...
+                  </td>
+                </tr>
+              ) : filteredRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-4">
+                    No registered records found.
+                  </td>
+                </tr>
+              ) : (
+                filteredRecords.map((rec, idx) => (
+                  <tr key={`admin-rec-${idx}`}>
+                    <td>
+                      <span className={`admin-cat-pill ${rec.categoryColor}`}>
+                        {rec.categoryLabel}
+                      </span>
+                    </td>
+                    <td className="font-semibold">{rec.name}</td>
+                    <td>{rec.subtitle}</td>
+                    <td>
+                      <span className="officer-name-tag">👤 {rec.creatorName}</span>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${rec.status.toLowerCase()}`}>
+                        {rec.status}
+                      </span>
+                    </td>
+                    <td>{rec.date}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className="admin-view-btn"
+                        onClick={() => openRecordModal(rec)}
+                      >
+                        <Eye size={14} />
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {selectedRecord && (
+        <RecordDetailsModal
+          record={selectedRecord}
+          onClose={() => setSelectedRecord(null)}
+        />
+      )}
     </div>
   );
 }
