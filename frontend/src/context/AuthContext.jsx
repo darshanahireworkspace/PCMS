@@ -42,6 +42,8 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem("policeToken");
     localStorage.removeItem("policeOfficer");
+    localStorage.removeItem("pcms_admin_token");
+    localStorage.removeItem("pcms_admin_user");
     setOfficer(null);
   };
 

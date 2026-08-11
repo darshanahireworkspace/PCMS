@@ -42,12 +42,6 @@ function Login() {
     (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
 
   useEffect(() => {
-    // If navigating under /admin or query param indicates admin PWA, redirect immediately
-    if (window.location.pathname.startsWith("/admin")) {
-      navigate("/admin/login", { replace: true });
-      return;
-    }
-
     localStorage.removeItem("username");
     localStorage.removeItem("password");
     localStorage.removeItem("loginUsername");

@@ -32,20 +32,29 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import useAuth from "./hooks/useAuth";
 import { useAdminAuth } from "./context/AdminAuthContext";
 
-function PublicOnlyRoute({ children }) {
+// Public route guard for Normal Police Officer App (Isolates officer flow)
+function OfficerPublicRoute({ children }) {
   const { officer, loading } = useAuth();
-  const { adminUser } = useAdminAuth();
 
   if (loading) return null;
-
-  // If logged in as SuperAdmin/Admin, isolate and route to Super Admin dashboard
-  if (adminUser) {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
 
   // If logged in as regular officer, route to Command App dashboard
   if (officer) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}
+
+// Public route guard for Super Admin Console (Isolates admin flow)
+function AdminPublicRoute({ children }) {
+  const { adminUser, adminLoading } = useAdminAuth();
+
+  if (adminLoading) return null;
+
+  // If logged in as SuperAdmin/Admin, route to Super Admin dashboard
+  if (adminUser && (adminUser.role === "SuperAdmin" || adminUser.role === "Admin")) {
+    return <Navigate to="/admin/dashboard" replace />;
   }
 
   return children;
@@ -73,17 +82,33 @@ function App() {
 
   return (
     <Routes>
+      {/* NORMAL OFFICER PUBLIC LOGIN ROUTE */}
       <Route
         path="/"
         element={
-          <PublicOnlyRoute>
+          <OfficerPublicRoute>
             <Login />
-          </PublicOnlyRoute>
+          </OfficerPublicRoute>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <OfficerPublicRoute>
+            <Login />
+          </OfficerPublicRoute>
         }
       />
 
-      {/* ADMIN ROUTES */}
-      <Route path="/admin/login" element={<AdminLogin />} />
+      {/* SUPER ADMIN ISOLATED ROUTES */}
+      <Route
+        path="/admin/login"
+        element={
+          <AdminPublicRoute>
+            <AdminLogin />
+          </AdminPublicRoute>
+        }
+      />
       <Route element={<AdminProtectedRoute />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -96,7 +121,7 @@ function App() {
         </Route>
       </Route>
 
-      {/* OFFICER COMMAND ROUTES */}
+      {/* NORMAL OFFICER PROTECTED COMMAND ROUTES */}
       <Route
         element={
           <ProtectedRoute>
