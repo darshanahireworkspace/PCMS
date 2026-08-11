@@ -1,18 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import {
-  Layers,
-  Navigation,
-  ShieldAlert,
-  Search,
-  Church,
-  CalendarCheck,
-  Store,
   MapPin,
+  Search,
+  Navigation,
   ExternalLink,
-  Phone,
-  Info,
-  Radio,
+  X,
+  Layers,
 } from "lucide-react";
 import L from "leaflet";
 import toast from "react-hot-toast";
@@ -82,12 +76,12 @@ function MapView() {
   const [flyPosition, setFlyPosition] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [modalRecord, setModalRecord] = useState(null);
   const mapRef = useRef(null);
 
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [riskFilter, setRiskFilter] = useState("All");
-  const [mapMode, setMapMode] = useState("street");
   const [searchText, setSearchText] = useState("");
+  const [mapMode, setMapMode] = useState("street");
 
   const fetchMapData = async () => {
     try {
@@ -115,146 +109,6 @@ function MapView() {
     fetchMapData();
   }, []);
 
-  useEffect(() => {
-    const command = localStorage.getItem("mapCommand");
-
-    if (command === "highRisk") {
-      setRiskFilter("High");
-      localStorage.removeItem("mapCommand");
-      toast.success("High risk locations highlighted");
-    } else if (command === "mediumRisk") {
-      setRiskFilter("Medium");
-      localStorage.removeItem("mapCommand");
-      toast.success("Medium risk locations highlighted");
-    } else if (command === "lowRisk") {
-      setRiskFilter("Low");
-      localStorage.removeItem("mapCommand");
-      toast.success("Low risk locations highlighted");
-    }
-  }, []);
-
-  const getAllMapRecords = () => {
-    const religious = places.map((item) => ({
-      ...item,
-      recordType: "Religious Place",
-      title: item.place_name,
-      subtitle: `${item.place_type || "-"} • ${item.area || "-"}`,
-    }));
-
-    const festivalRecords = festivals.map((item) => ({
-      ...item,
-      recordType: "Festival Mandal",
-      title: item.organizer_name || item.mandal_name || item.festival_name,
-      subtitle: `${item.festival_name || "-"} • ${item.area || "-"}`,
-    }));
-
-    const others = otherPlaces.map((item) => ({
-      ...item,
-      recordType: "Other City Data",
-      title: item.place_name,
-      subtitle: `${item.category || "-"} • ${item.area || "-"}`,
-    }));
-
-    return [...religious, ...festivalRecords, ...others].filter(
-      (item) => item.latitude && item.longitude
-    );
-  };
-
-  useEffect(() => {
-    const search = localStorage.getItem("mapSearch");
-    if (!search) return;
-
-    const timer = setTimeout(() => {
-      const q = search.toLowerCase().trim();
-      const allRecords = getAllMapRecords();
-
-      const found = allRecords.find((item) => {
-        const text = `
-          ${item.title || ""}
-          ${item.place_name || ""}
-          ${item.organizer_name || ""}
-          ${item.mandal_name || ""}
-          ${item.festival_name || ""}
-          ${item.category || ""}
-          ${item.area || ""}
-          ${item.address || ""}
-          ${item.mobile || ""}
-          ${item.contact_mobile || ""}
-        `.toLowerCase();
-
-        return text.includes(q);
-      });
-
-      if (found) {
-        const lat = Number(found.latitude);
-        const lng = Number(found.longitude);
-
-        setSelectedRecord(found);
-        setFlyPosition([lat, lng]);
-
-        if (mapRef.current) {
-          mapRef.current.flyTo([lat, lng], 17, {
-            animate: true,
-            duration: 1.4,
-          });
-        }
-        toast.success(`${found.title} found on map`);
-      } else {
-        setSearchText(search);
-        toast.error("Exact record not found. Filtered search results.");
-      }
-
-      localStorage.removeItem("mapSearch");
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [places, festivals, otherPlaces]);
-
-  const filteredPlaces = useMemo(() => {
-    if (categoryFilter === "festival" || categoryFilter === "other") return [];
-
-    return places.filter((p) => {
-      const matchesRisk = riskFilter === "All" || p.risk_level === riskFilter;
-      const matchesSearch =
-        !searchText ||
-        p.place_name?.toLowerCase().includes(searchText.toLowerCase()) ||
-        p.area?.toLowerCase().includes(searchText.toLowerCase()) ||
-        p.place_type?.toLowerCase().includes(searchText.toLowerCase());
-
-      return matchesRisk && matchesSearch;
-    });
-  }, [places, categoryFilter, riskFilter, searchText]);
-
-  const filteredFestivals = useMemo(() => {
-    if (categoryFilter === "places" || categoryFilter === "other") return [];
-
-    return festivals.filter((f) => {
-      const matchesSearch =
-        !searchText ||
-        f.organizer_name?.toLowerCase().includes(searchText.toLowerCase()) ||
-        f.festival_name?.toLowerCase().includes(searchText.toLowerCase()) ||
-        f.area?.toLowerCase().includes(searchText.toLowerCase());
-
-      return matchesSearch;
-    });
-  }, [festivals, categoryFilter, searchText]);
-
-  const filteredOtherPlaces = useMemo(() => {
-    if (categoryFilter === "places" || categoryFilter === "festival") return [];
-
-    return otherPlaces.filter((o) => {
-      const matchesSearch =
-        !searchText ||
-        o.place_name?.toLowerCase().includes(searchText.toLowerCase()) ||
-        o.category?.toLowerCase().includes(searchText.toLowerCase()) ||
-        o.area?.toLowerCase().includes(searchText.toLowerCase()) ||
-        o.address?.toLowerCase().includes(searchText.toLowerCase()) ||
-        o.mobile?.toLowerCase().includes(searchText.toLowerCase());
-
-      return matchesSearch;
-    });
-  }, [otherPlaces, categoryFilter, searchText]);
-
   const handleCurrentLocation = () => {
     if (!navigator.geolocation) {
       toast.error("Geolocation not supported by your browser");
@@ -277,21 +131,73 @@ function MapView() {
     );
   };
 
-  const tileUrl =
-    mapMode === "satellite"
-      ? "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  const matchSearch = (item) => {
+    if (!searchText.trim()) return true;
+    const q = searchText.toLowerCase().trim();
+    const title = (
+      item.place_name ||
+      item.organizer_name ||
+      item.festival_name ||
+      item.mandal_name ||
+      ""
+    ).toLowerCase();
+    const subtitle = (
+      item.place_type ||
+      item.category ||
+      item.area ||
+      item.address ||
+      ""
+    ).toLowerCase();
+    const contact = (
+      item.contact_person ||
+      item.president_name ||
+      item.owner_name ||
+      ""
+    ).toLowerCase();
+    const phone = String(
+      item.contact_mobile || item.president_mobile || item.mobile || ""
+    );
 
-  const highRiskCount = places.filter((p) => p.risk_level === "High").length;
+    return (
+      title.includes(q) ||
+      subtitle.includes(q) ||
+      contact.includes(q) ||
+      phone.includes(q)
+    );
+  };
+
+  const filteredPlaces = useMemo(() => {
+    if (categoryFilter === "festival" || categoryFilter === "other") return [];
+    return places.filter(matchSearch);
+  }, [places, categoryFilter, searchText]);
+
+  const filteredFestivals = useMemo(() => {
+    if (categoryFilter === "places" || categoryFilter === "other") return [];
+    return festivals.filter(matchSearch);
+  }, [festivals, categoryFilter, searchText]);
+
+  const filteredOtherPlaces = useMemo(() => {
+    if (categoryFilter === "places" || categoryFilter === "festival") return [];
+    return otherPlaces.filter(matchSearch);
+  }, [otherPlaces, categoryFilter, searchText]);
+
   const totalRecordsOnMap =
-    filteredPlaces.length + filteredFestivals.length + filteredOtherPlaces.length;
+    filteredPlaces.length +
+    filteredFestivals.length +
+    filteredOtherPlaces.length;
 
   const selectRecordHandler = (item, typeName) => {
     const record = {
       ...item,
       recordType: typeName,
-      title: item.place_name || item.organizer_name || item.festival_name || "Record",
-      subtitle: `${item.place_type || item.festival_name || item.category || "-"} • ${item.area || "-"}`,
+      title:
+        item.place_name ||
+        item.organizer_name ||
+        item.festival_name ||
+        "Record",
+      subtitle: `${
+        item.place_type || item.festival_name || item.category || "-"
+      } • ${item.area || "-"}`,
     };
     setSelectedRecord(record);
     if (item.latitude && item.longitude) {
@@ -299,422 +205,338 @@ function MapView() {
     }
   };
 
+  const tileUrl =
+    mapMode === "satellite"
+      ? "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
   return (
-    <div className="gis-command-page">
-      {/* PAGE HEADER */}
-      <div className="gis-page-header">
-        <div className="header-title-block">
-          <div className="live-status-badge">
-            <Radio size={14} className="pulse-dot" />
-            <span>LIVE MONITORING</span>
+    <div className="gis-redesign-container">
+      {/* 1. PAGE HEADER */}
+      <div className="gis-header-block">
+        <div className="gis-header-left">
+          <div className="gis-header-icon-box">
+            <MapPin size={22} />
           </div>
-          <h2>Live GIS Command Center</h2>
-          <p>Malegaon City GIS Map & Real-time Location Monitoring</p>
+          <div>
+            <h2 className="gis-page-title">GIS Map</h2>
+            <p className="gis-page-subtitle">
+              View and locate registered city records
+            </p>
+          </div>
         </div>
 
-        <div className="header-kpis-strip">
-          <div className="header-kpi-chip">
-            <span className="kpi-label">Total Places</span>
-            <b className="kpi-value">{places.length}</b>
-          </div>
-          <div className="header-kpi-chip red-kpi">
-            <span className="kpi-label">High Risk</span>
-            <b className="kpi-value">{highRiskCount}</b>
-          </div>
-          <div className="header-kpi-chip amber-kpi">
-            <span className="kpi-label">Festivals</span>
-            <b className="kpi-value">{festivals.length}</b>
-          </div>
-          <div className="header-kpi-chip blue-kpi">
-            <span className="kpi-label">Other Places</span>
-            <b className="kpi-value">{otherPlaces.length}</b>
-          </div>
+        <div className="gis-header-actions">
+          <button
+            type="button"
+            className="secondary-btn btn-sm"
+            onClick={() =>
+              setMapMode((prev) => (prev === "street" ? "satellite" : "street"))
+            }
+          >
+            <Layers size={15} />
+            {mapMode === "street" ? "Satellite View" : "Street View"}
+          </button>
 
           <button
             type="button"
             className="primary-btn btn-sm"
             onClick={handleCurrentLocation}
           >
-            <Navigation size={16} />
+            <Navigation size={15} />
             My Location
           </button>
         </div>
       </div>
 
-      {/* SEARCH AND FILTERS TOOLBAR */}
-      <div className="gis-toolbar-card">
-        <div className="gis-search-input-box">
-          <Search size={18} className="search-icon-teal" />
+      {/* 2. SEARCH BAR */}
+      <div className="gis-search-card">
+        <div className="gis-search-inner">
+          <Search size={19} className="gis-search-icon" />
           <input
             type="text"
+            className="gis-search-input"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search place, festival, area or ward..."
+            placeholder="Search places, stations, officers..."
+            aria-label="Search places, stations, officers"
           />
-        </div>
-
-        <div className="gis-filter-pills-row">
-          <span className="filter-group-label">Category:</span>
-          <div className="pills-scroll-container">
+          {searchText && (
             <button
               type="button"
-              className={`filter-pill ${categoryFilter === "all" ? "active" : ""}`}
-              onClick={() => setCategoryFilter("all")}
+              className="gis-clear-search"
+              onClick={() => setSearchText("")}
+              aria-label="Clear search"
             >
-              ALL ({places.length + festivals.length + otherPlaces.length})
+              <X size={16} />
             </button>
-            <button
-              type="button"
-              className={`filter-pill ${categoryFilter === "places" ? "active" : ""}`}
-              onClick={() => setCategoryFilter("places")}
-            >
-              🛕 RELIGIOUS ({places.length})
-            </button>
-            <button
-              type="button"
-              className={`filter-pill ${categoryFilter === "festival" ? "active" : ""}`}
-              onClick={() => setCategoryFilter("festival")}
-            >
-              🎉 FESTIVAL MANDALS ({festivals.length})
-            </button>
-            <button
-              type="button"
-              className={`filter-pill ${categoryFilter === "other" ? "active" : ""}`}
-              onClick={() => setCategoryFilter("other")}
-            >
-              🏪 OTHER PLACES ({otherPlaces.length})
-            </button>
-          </div>
-
-          <div className="filter-divider-v"></div>
-
-          <span className="filter-group-label">Risk:</span>
-          <div className="pills-scroll-container">
-            <button
-              type="button"
-              className={`filter-pill risk-pill ${riskFilter === "All" ? "active" : ""}`}
-              onClick={() => setRiskFilter("All")}
-            >
-              ALL RISK
-            </button>
-            <button
-              type="button"
-              className={`filter-pill risk-pill green ${riskFilter === "Low" ? "active" : ""}`}
-              onClick={() => setRiskFilter("Low")}
-            >
-              🟢 LOW
-            </button>
-            <button
-              type="button"
-              className={`filter-pill risk-pill amber ${riskFilter === "Medium" ? "active" : ""}`}
-              onClick={() => setRiskFilter("Medium")}
-            >
-              🟠 MEDIUM
-            </button>
-            <button
-              type="button"
-              className={`filter-pill risk-pill red ${riskFilter === "High" ? "active" : ""}`}
-              onClick={() => setRiskFilter("High")}
-            >
-              🔴 HIGH ({highRiskCount})
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* MAIN THREE-COLUMN GIS LAYOUT */}
-      <div className="gis-main-shell">
-        {/* LEFT PANEL: CONTROLS & LEGEND */}
-        <aside className="gis-left-panel">
-          <div className="panel-box">
-            <div className="panel-box-header">
-              <Layers size={18} />
-              <h4>Map Settings</h4>
-            </div>
+      {/* 3. SIMPLIFIED CATEGORY FILTER ROW */}
+      <div className="gis-filter-bar">
+        <button
+          type="button"
+          className={`gis-filter-btn ${
+            categoryFilter === "all" ? "active" : ""
+          }`}
+          onClick={() => setCategoryFilter("all")}
+        >
+          All Records ({places.length + festivals.length + otherPlaces.length})
+        </button>
 
-            <div className="control-group">
-              <label>Tile Layer Mode</label>
-              <select
-                className="gis-select-input"
-                value={mapMode}
-                onChange={(e) => setMapMode(e.target.value)}
+        <button
+          type="button"
+          className={`gis-filter-btn ${
+            categoryFilter === "places" ? "active" : ""
+          }`}
+          onClick={() => setCategoryFilter("places")}
+        >
+          🛕 Religious ({places.length})
+        </button>
+
+        <button
+          type="button"
+          className={`gis-filter-btn ${
+            categoryFilter === "festival" ? "active" : ""
+          }`}
+          onClick={() => setCategoryFilter("festival")}
+        >
+          🎉 Festivals ({festivals.length})
+        </button>
+
+        <button
+          type="button"
+          className={`gis-filter-btn ${
+            categoryFilter === "other" ? "active" : ""
+          }`}
+          onClick={() => setCategoryFilter("other")}
+        >
+          🏢 Other ({otherPlaces.length})
+        </button>
+      </div>
+
+      {/* 4. MAIN MAP CARD CONTAINER */}
+      <div className="gis-map-viewport-card">
+        <div className="gis-map-inner-box">
+          <MapContainer
+            center={[20.5579, 74.5287]}
+            zoom={13}
+            dragging={true}
+            touchZoom={true}
+            scrollWheelZoom={true}
+            doubleClickZoom={true}
+            zoomControl={true}
+            className="gis-leaflet-canvas"
+            ref={mapRef}
+          >
+            <TileLayer
+              attribution="&copy; OpenStreetMap contributors"
+              url={tileUrl}
+            />
+
+            <FlyToLocation position={flyPosition} />
+
+            {userLocation && (
+              <Marker position={userLocation} icon={createUserLocationIcon()}>
+                <Popup>
+                  <div className="map-popup">
+                    <b>Your Live Location</b>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+
+            {filteredPlaces.map((place) => (
+              <Marker
+                key={`place-${place.id}`}
+                position={[Number(place.latitude), Number(place.longitude)]}
+                icon={createPlaceIcon(
+                  riskColor[place.risk_level] || riskColor.Low
+                )}
+                eventHandlers={{
+                  click: () => selectRecordHandler(place, "Religious Place"),
+                }}
               >
-                <option value="street">Street Map (OpenStreetMap)</option>
-                <option value="satellite">Terrain / Satellite Map</option>
-              </select>
-            </div>
-          </div>
+                <Popup>
+                  <div className="map-popup dashboard-marker-popup">
+                    <h3>{place.place_name}</h3>
+                    <p>
+                      <b>Type:</b> {place.place_type || "Religious Place"}
+                    </p>
+                    <p>
+                      <b>Area:</b> {place.area || "-"}
+                    </p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
 
-          <div className="panel-box">
-            <div className="panel-box-header">
-              <Info size={18} />
-              <h4>Map Markers Legend</h4>
-            </div>
-
-            <div className="gis-legend-list">
-              <div className="legend-item">
-                <i className="legend-circle"></i>
-                <span>Permanent Religious Place</span>
-              </div>
-              <div className="legend-item">
-                <i className="legend-diamond"></i>
-                <span>Festival Mandal</span>
-              </div>
-              <div className="legend-item">
-                <i className="legend-square"></i>
-                <span>Other City Place</span>
-              </div>
-
-              <div className="legend-divider"></div>
-
-              <div className="legend-item">
-                <span className="dot-badge green"></span>
-                <span>Low Risk Location</span>
-              </div>
-              <div className="legend-item">
-                <span className="dot-badge amber"></span>
-                <span>Medium Risk Location</span>
-              </div>
-              <div className="legend-item">
-                <span className="dot-badge red"></span>
-                <span>High Risk Location</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="panel-box risk-alert-panel">
-            <ShieldAlert size={22} className="alert-icon-red" />
-            <div>
-              <h4>High Risk Alert</h4>
-              <p><b>{highRiskCount}</b> locations require high police monitoring</p>
-            </div>
-          </div>
-        </aside>
-
-        {/* CENTER COLUMN: INTERACTIVE LEAFLET MAP */}
-        <main className="gis-map-card">
-          <div className="map-card-header">
-            <div className="map-title">
-              <MapPin size={18} />
-              <h3>Interactive GIS Map</h3>
-              <span className="map-records-badge">{totalRecordsOnMap} Places Visible</span>
-            </div>
-
-            <div className="map-view-controls">
-              <button
-                type="button"
-                className="btn-map-control"
-                onClick={() => setFlyPosition([20.5579, 74.5287])}
+            {filteredFestivals.map((festival) => (
+              <Marker
+                key={`festival-${festival.id}`}
+                position={[
+                  Number(festival.latitude),
+                  Number(festival.longitude),
+                ]}
+                icon={createFestivalIcon()}
+                eventHandlers={{
+                  click: () => selectRecordHandler(festival, "Festival Mandal"),
+                }}
               >
-                Reset View
-              </button>
-            </div>
+                <Popup>
+                  <div className="map-popup dashboard-marker-popup">
+                    <h3>
+                      {festival.organizer_name || festival.festival_name}
+                    </h3>
+                    <p>
+                      <b>Festival:</b> {festival.festival_name || "-"}
+                    </p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+
+            {filteredOtherPlaces.map((item) => (
+              <Marker
+                key={`other-${item.id}`}
+                position={[Number(item.latitude), Number(item.longitude)]}
+                icon={createOtherIcon()}
+                eventHandlers={{
+                  click: () => selectRecordHandler(item, "Other City Data"),
+                }}
+              >
+                <Popup>
+                  <div className="map-popup dashboard-marker-popup">
+                    <h3>{item.place_name}</h3>
+                    <p>
+                      <b>Category:</b> {item.category || "Other"}
+                    </p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+
+          {/* COMPACT MAP LEGEND OVERLAY */}
+          <div className="gis-map-overlay-legend">
+            <span>
+              <i className="legend-dot teal"></i> Religious
+            </span>
+            <span>
+              <i className="legend-dot purple"></i> Festival
+            </span>
+            <span>
+              <i className="legend-dot blue"></i> Other
+            </span>
           </div>
 
-          <div className="gis-map-wrapper">
-            <MapContainer
-              center={[20.5579, 74.5287]}
-              zoom={13}
-              dragging={true}
-              touchZoom={true}
-              scrollWheelZoom={true}
-              doubleClickZoom={true}
-              zoomControl={true}
-              className="gis-leaflet-container"
-              ref={mapRef}
-            >
-              <TileLayer
-                attribution="&copy; OpenStreetMap contributors"
-                url={tileUrl}
-              />
-
-              <FlyToLocation position={flyPosition} />
-
-              {userLocation && (
-                <Marker position={userLocation} icon={createUserLocationIcon()}>
-                  <Popup>
-                    <div className="map-popup">
-                      <b>Your Live Location</b>
-                    </div>
-                  </Popup>
-                </Marker>
-              )}
-
-              {filteredPlaces.map((place) => (
-                <Marker
-                  key={`place-${place.id}`}
-                  position={[Number(place.latitude), Number(place.longitude)]}
-                  icon={createPlaceIcon(riskColor[place.risk_level] || riskColor.Low)}
-                  eventHandlers={{
-                    click: () => selectRecordHandler(place, "Religious Place"),
-                  }}
-                >
-                  <Popup>
-                    <div className="map-popup dashboard-marker-popup">
-                      <h3>{place.place_name}</h3>
-                      <p><b>Type:</b> {place.place_type || "Religious Place"}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-
-              {filteredFestivals.map((festival) => (
-                <Marker
-                  key={`festival-${festival.id}`}
-                  position={[Number(festival.latitude), Number(festival.longitude)]}
-                  icon={createFestivalIcon()}
-                  eventHandlers={{
-                    click: () => selectRecordHandler(festival, "Festival Mandal"),
-                  }}
-                >
-                  <Popup>
-                    <div className="map-popup dashboard-marker-popup">
-                      <h3>{festival.organizer_name || festival.festival_name}</h3>
-                      <p><b>Festival:</b> {festival.festival_name || "-"}</p>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-
-              {filteredOtherPlaces.map((item) => (
-                <Marker
-                  key={`other-${item.id}`}
-                  position={[Number(item.latitude), Number(item.longitude)]}
-                  icon={createOtherIcon()}
-                  eventHandlers={{
-                    click: () => selectRecordHandler(item, "Other City Data"),
-                  }}
-                >
-                  <Popup>
-                    <div className="map-popup dashboard-marker-popup">
-                      <h3>{item.place_name}</h3>
-                      <p><b>Category:</b> {item.category || "Other"}</p>
-                      <p><b>Area:</b> {item.area || "-"}</p>
-                      <button
-                        type="button"
-                        className="popup-details-btn"
-                        onClick={() => selectRecordHandler(item, "Other City Data")}
-                      >
-                        View Full Details
-                      </button>
-                    </div>
-                  </Popup>
-                </Marker>
-              ))}
-            </MapContainer>
-          </div>
-        </main>
-
-        {/* RIGHT PANEL: SELECTED DETAILS & RECORD LIST */}
-        <aside className="gis-right-panel">
-          {selectedRecord ? (
-            <div className="panel-box selected-record-box">
-              <div className="selected-header">
-                <span className="selected-badge">{selectedRecord.recordType}</span>
-                <h3>{selectedRecord.title}</h3>
-                <p>{selectedRecord.subtitle}</p>
-              </div>
-
-              <div className="selected-quick-details">
-                <div>
-                  <span className="quick-label">Area</span>
-                  <b>{selectedRecord.area || "-"}</b>
-                </div>
-                <div>
-                  <span className="quick-label">Police Station</span>
-                  <b>{selectedRecord.police_station || "-"}</b>
-                </div>
-                <div>
-                  <span className="quick-label">Risk / Status</span>
-                  <b>
-                    {selectedRecord.risk_level ||
-                      selectedRecord.permission_status ||
-                      "-"}
-                  </b>
-                </div>
-              </div>
-
-              <div className="selected-actions-row">
-                <button
-                  type="button"
-                  className="primary-btn btn-sm"
-                  onClick={() => setSelectedRecord(selectedRecord)}
-                >
-                  <ExternalLink size={15} />
-                  Full View Details
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="panel-box empty-selected-box">
-              <Info size={24} className="icon-muted" />
-              <p>Click any map marker or record below to view details</p>
+          {/* NO RESULTS BADGE */}
+          {totalRecordsOnMap === 0 && (
+            <div className="gis-map-empty-overlay">
+              <p>No locations found matching search filter.</p>
             </div>
           )}
+        </div>
 
-          <div className="panel-box">
-            <div className="panel-box-header">
-              <Church size={18} />
-              <h4>Monitored Places ({totalRecordsOnMap})</h4>
+        {/* SELECTED RECORD BOTTOM DETAILS PANEL */}
+        {selectedRecord && (
+          <div className="gis-selected-detail-card">
+            <div className="selected-detail-header">
+              <div>
+                <span className="selected-detail-type">
+                  {selectedRecord.recordType}
+                </span>
+                <h4 className="selected-detail-title">
+                  {selectedRecord.title}
+                </h4>
+                <p className="selected-detail-subtitle">
+                  {selectedRecord.subtitle}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="selected-detail-close"
+                onClick={() => setSelectedRecord(null)}
+                aria-label="Close details"
+              >
+                <X size={18} />
+              </button>
             </div>
 
-            <div className="gis-sidebar-records-scroll">
-              {filteredPlaces.map((place) => (
-                <div
-                  className="gis-sidebar-record-card"
-                  key={`side-place-${place.id}`}
-                  onClick={() => selectRecordHandler(place, "Religious Place")}
-                >
-                  <Church size={16} className="card-icon teal" />
-                  <div className="card-info">
-                    <b>{place.place_name}</b>
-                    <p>{place.place_type || "Religious"} • {place.area || "-"}</p>
-                  </div>
-                  <span className={`risk-tag-dot ${place.risk_level?.toLowerCase() || "low"}`}>
-                    {place.risk_level || "Low"}
-                  </span>
-                </div>
-              ))}
+            <div className="selected-detail-meta">
+              <span>📍 {selectedRecord.area || selectedRecord.address || "-"}</span>
+              <span>
+                🛡️ {selectedRecord.risk_level || selectedRecord.permission_status || selectedRecord.category || "Monitored"}
+              </span>
+            </div>
 
-              {filteredFestivals.map((festival) => (
-                <div
-                  className="gis-sidebar-record-card festival"
-                  key={`side-festival-${festival.id}`}
-                  onClick={() => selectRecordHandler(festival, "Festival Mandal")}
-                >
-                  <CalendarCheck size={16} className="card-icon amber" />
-                  <div className="card-info">
-                    <b>{festival.organizer_name || festival.festival_name}</b>
-                    <p>{festival.festival_name} • {festival.area || "-"}</p>
-                  </div>
-                  <span className="status-tag-amber">
-                    {festival.permission_status || "Pending"}
-                  </span>
-                </div>
-              ))}
+            <div className="selected-detail-actions">
+              <button
+                type="button"
+                className="primary-btn btn-sm"
+                onClick={() => setModalRecord(selectedRecord)}
+              >
+                <ExternalLink size={14} />
+                View Full Details
+              </button>
 
-              {filteredOtherPlaces.map((item) => (
-                <div
-                  className="gis-sidebar-record-card other"
-                  key={`side-other-${item.id}`}
-                  onClick={() => selectRecordHandler(item, "Other City Data")}
+              {selectedRecord.latitude && selectedRecord.longitude && (
+                <a
+                  href={`https://www.google.com/maps?q=${selectedRecord.latitude},${selectedRecord.longitude}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="secondary-btn btn-sm"
                 >
-                  <Store size={16} className="card-icon blue" />
-                  <div className="card-info">
-                    <b>{item.place_name}</b>
-                    <p>{item.category || "Other"} • {item.area || "-"}</p>
-                  </div>
-                </div>
-              ))}
+                  📍 Open Maps
+                </a>
+              )}
             </div>
           </div>
-        </aside>
+        )}
+      </div>
+
+      {/* 5. COMPACT MAP SUMMARY STRIP */}
+      <div className="gis-summary-strip">
+        <div className="gis-summary-card">
+          <span className="summary-icon blue">📍</span>
+          <div>
+            <b>{totalRecordsOnMap}</b>
+            <span>Total Visible</span>
+          </div>
+        </div>
+
+        <div className="gis-summary-card">
+          <span className="summary-icon teal">🛕</span>
+          <div>
+            <b>{filteredPlaces.length}</b>
+            <span>Religious</span>
+          </div>
+        </div>
+
+        <div className="gis-summary-card">
+          <span className="summary-icon purple">🎉</span>
+          <div>
+            <b>{filteredFestivals.length}</b>
+            <span>Festivals</span>
+          </div>
+        </div>
+
+        <div className="gis-summary-card">
+          <span className="summary-icon emerald">🏢</span>
+          <div>
+            <b>{filteredOtherPlaces.length}</b>
+            <span>Other</span>
+          </div>
+        </div>
       </div>
 
       {/* UNIVERSAL RECORD DETAILS MODAL */}
       <RecordDetailsModal
-        record={selectedRecord}
-        onClose={() => setSelectedRecord(null)}
+        record={modalRecord}
+        onClose={() => setModalRecord(null)}
       />
     </div>
   );
