@@ -1,6 +1,6 @@
--- Police City Management System V2 - Migration 013
+-- Police City Management System V2 - Migration 013 (Safe Drop & Recreate RLS Policies)
 -- File: 013_fix_pcms_rls_policies.sql
--- Description: Enable seamless, secure insert/update/select/delete access for PCMS master tables (religious_places, other_places, festival_permissions, place_visits, audit_logs)
+-- Description: Enable seamless, secure insert/update/select/delete access for PCMS master tables
 
 -- 1. RELIGIOUS PLACES RLS POLICIES
 ALTER TABLE public.religious_places ENABLE ROW LEVEL SECURITY;
@@ -10,10 +10,6 @@ DROP POLICY IF EXISTS "Authenticated officers select religious_places" ON public
 DROP POLICY IF EXISTS "Authenticated officers insert religious_places" ON public.religious_places;
 DROP POLICY IF EXISTS "Authenticated officers update religious_places" ON public.religious_places;
 DROP POLICY IF EXISTS "Authenticated officers delete religious_places" ON public.religious_places;
-DROP POLICY IF EXISTS "Enable insert for all authenticated pcms requests" ON public.religious_places;
-DROP POLICY IF EXISTS "Enable select for all pcms requests" ON public.religious_places;
-DROP POLICY IF EXISTS "Enable update for all pcms requests" ON public.religious_places;
-DROP POLICY IF EXISTS "Enable delete for all pcms requests" ON public.religious_places;
 DROP POLICY IF EXISTS "Enable select for all pcms requests on religious_places" ON public.religious_places;
 DROP POLICY IF EXISTS "Enable insert for all pcms requests on religious_places" ON public.religious_places;
 DROP POLICY IF EXISTS "Enable update for all pcms requests on religious_places" ON public.religious_places;
@@ -29,8 +25,7 @@ CREATE POLICY "Enable insert for all pcms requests on religious_places"
 
 CREATE POLICY "Enable update for all pcms requests on religious_places"
     ON public.religious_places FOR UPDATE
-    USING (true)
-    WITH CHECK (place_name IS NOT NULL);
+    USING (true);
 
 CREATE POLICY "Enable delete for all pcms requests on religious_places"
     ON public.religious_places FOR DELETE
