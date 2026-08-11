@@ -80,15 +80,25 @@ function App() {
     return <OfflinePage />;
   }
 
+  const isAdminDomain =
+    window.location.hostname.includes("pcms-admin") ||
+    window.location.hostname.startsWith("admin.");
+
   return (
     <Routes>
-      {/* NORMAL OFFICER PUBLIC LOGIN ROUTE */}
+      {/* NORMAL OFFICER / ADMIN DOMAIN AWARE PUBLIC LOGIN ROUTE */}
       <Route
         path="/"
         element={
-          <OfficerPublicRoute>
-            <Login />
-          </OfficerPublicRoute>
+          isAdminDomain ? (
+            <AdminPublicRoute>
+              <AdminLogin />
+            </AdminPublicRoute>
+          ) : (
+            <OfficerPublicRoute>
+              <Login />
+            </OfficerPublicRoute>
+          )
         }
       />
       <Route

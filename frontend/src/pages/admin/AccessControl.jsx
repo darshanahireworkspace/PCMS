@@ -70,6 +70,7 @@ function AccessControl() {
       );
     } catch (err) {
       console.error("Role update error:", err);
+
       toast.error("Failed to update officer role");
     }
   };
@@ -262,8 +263,8 @@ function AccessControl() {
                           {off.access_scope === "ALL" || isSuperAdmin
                             ? "Full visibility: Can view & monitor all city locations, maps & reports"
                             : off.access_scope === "TEAM"
-                            ? "Squad visibility: Can view records created by own team squad"
-                            : "Private visibility: Can view only self-created private records"}
+                              ? "Squad visibility: Can view records created by own team squad"
+                              : "Private visibility: Can view only self-created private records"}
                         </small>
                       </td>
                     </tr>

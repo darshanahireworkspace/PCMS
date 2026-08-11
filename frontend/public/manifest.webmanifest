@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "Malegaon Police",
+  "short_name": "Malegaon Police",
+  "description": "मालेगाव शहर पोलीस व्यवस्थापन प्रणाली - Malegaon City Police Management System",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#071b3b",
+  "background_color": "#071b3b",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
