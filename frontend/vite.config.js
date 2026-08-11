@@ -12,9 +12,9 @@ export default defineConfig({
       manifest: {
         id: "/",
 
-        name: "छावणी पोलीस",
-        short_name: "छावणी पोलीस",
-        description: "Police City Religious and Festival Management System",
+        name: "मालेगाव शहर पोलीस व्यवस्थापन प्रणाली",
+        short_name: "मालेगाव पोलीस",
+        description: "मालेगाव शहर पोलीस व्यवस्थापन प्रणाली - Malegaon City Police Management System",
 
         start_url: "/",
         scope: "/",
@@ -67,6 +67,7 @@ export default defineConfig({
 
       workbox: {
         navigateFallback: "/index.html",
+        navigateFallbackAllowlist: [/^\/admin/, /^\/[^/.]*$/],
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,

@@ -44,8 +44,8 @@ serve(async (req: Request) => {
   const path = url.pathname;
 
   try {
-    // 1. LOGIN ROUTE (supports /auth/login, /admin-auth/login, /auth)
-    if (req.method === "POST" && (path.endsWith("/login") || path.endsWith("/auth") || path.includes("/admin-auth"))) {
+    // 1. ADMIN LOGIN ROUTE (POST /admin-auth/login or POST /admin-auth)
+    if (req.method === "POST" && (path.endsWith("/login") || path.endsWith("/admin-auth") || path.includes("/login"))) {
       const body = await req.json();
       const cleanUsername = String(body.username || "").trim();
       const cleanPassword = String(body.password || "").trim();
@@ -54,7 +54,7 @@ serve(async (req: Request) => {
         return sendError("Username and password are required", null, 400);
       }
 
-      // Check SuperAdmin credentials: pcmsadmin / PCMS@Admin2026
+      // Check SuperAdmin special credentials: pcmsadmin / PCMS@Admin2026
       if (cleanUsername.toLowerCase() === "pcmsadmin" && cleanPassword === "PCMS@Admin2026") {
         let adminOfficer = null;
         try {
@@ -88,10 +88,9 @@ serve(async (req: Request) => {
             adminOfficer = newAdmin;
           }
         } catch (dbErr) {
-          console.warn("DB query/insert error during pcmsadmin login:", dbErr);
+          console.warn("DB notice during pcmsadmin query:", dbErr);
         }
 
-        // Return valid SuperAdmin session regardless of DB state
         const adminId = adminOfficer?.id || "00000000-0000-0000-0000-000000000001";
         const jwtSecret = Deno.env.get("JWT_SECRET") || "pcms_v2_jwt_secret_key_change_in_production";
         const token = await generateJwt(
@@ -134,7 +133,7 @@ serve(async (req: Request) => {
         });
       }
 
-      // Standard Officer Login
+      // Check DB for any other Admin / SuperAdmin
       const { data: officers, error } = await supabase
         .from("officers")
         .select("*")
@@ -142,66 +141,18 @@ serve(async (req: Request) => {
         .eq("status", "Active")
         .limit(1);
 
-      if (error) {
-        console.error("Supabase officer login error:", error);
-        return sendError("Database query failed", error.message, 500);
+      if (error || !officers || officers.length === 0) {
+        return sendError("Invalid administrator credentials", null, 401);
       }
 
-      let officer = officers && officers.length > 0 ? officers[0] : null;
-
-      // Legacy fallback for initial deployment
-      if (!officer && cleanUsername === "7720075275" && cleanPassword === "77200") {
-        const passHash = await hashPassword("77200");
-        try {
-          const { data: newOfficer } = await supabase
-            .from("officers")
-            .insert([
-              {
-                full_name: "Chhavani Officer",
-                username: "7720075275",
-                email: "7720075275@pcms.gov.in",
-                password_hash: passHash,
-                role: "Officer",
-                access_scope: "OWN",
-                status: "Active",
-                designation: "Head Constable",
-              },
-            ])
-            .select()
-            .single();
-
-          if (newOfficer) {
-            officer = newOfficer;
-          }
-        } catch (e) {
-          console.warn("Legacy officer insert notice:", e);
-        }
+      const officer = officers[0];
+      if (officer.role !== "SuperAdmin" && officer.role !== "Admin") {
+        return sendError("Access denied: Not an administrator account", null, 403);
       }
 
-      if (!officer) {
-        return sendError("Invalid username or password", null, 401);
-      }
-
-      // Verify password
       const isValid = await verifyPassword(cleanPassword, officer.password_hash);
-      if (!isValid && !(cleanUsername === "7720075275" && cleanPassword === "77200")) {
-        return sendError("Invalid username or password", null, 401);
-      }
-
-      // Fetch team if assigned
-      let teamId = null;
-      try {
-        const { data: teamMember } = await supabase
-          .from("team_members")
-          .select("team_id")
-          .eq("officer_id", officer.id)
-          .limit(1)
-          .maybeSingle();
-        if (teamMember) {
-          teamId = teamMember.team_id;
-        }
-      } catch (e) {
-        console.warn("Team query notice:", e);
+      if (!isValid) {
+        return sendError("Invalid administrator credentials", null, 401);
       }
 
       const jwtSecret = Deno.env.get("JWT_SECRET") || "pcms_v2_jwt_secret_key_change_in_production";
@@ -210,74 +161,40 @@ serve(async (req: Request) => {
           id: officer.id,
           username: officer.username,
           full_name: officer.full_name,
-          role: officer.role || "Officer",
-          access_scope: officer.access_scope || "OWN",
+          role: officer.role,
+          access_scope: officer.access_scope || "ALL",
           police_station_id: officer.police_station_id,
-          team_id: teamId,
         },
         jwtSecret
       );
 
-      // Write audit log
-      try {
-        await supabase.from("audit_logs").insert([
-          {
-            user_id: officer.id,
-            user_name: officer.full_name,
-            action: "LOGIN",
-            entity_type: "officers",
-            entity_id: officer.id,
-            description: `Officer ${officer.full_name} (${officer.role}) logged in`,
-          },
-        ]);
-      } catch (auditErr) {
-        console.warn("Failed to write audit log:", auditErr);
-      }
-
-      return sendSuccess("Officer login successful", {
+      return sendSuccess("Admin authentication successful", {
         token,
         officer: {
           id: officer.id,
           full_name: officer.full_name,
           username: officer.username,
-          role: officer.role || "Officer",
-          access_scope: officer.access_scope || "OWN",
-          police_station_id: officer.police_station_id,
-          police_station: officer.police_station_name || "Chhavani Police Station",
-          team_id: teamId,
+          role: officer.role,
+          access_scope: officer.access_scope || "ALL",
+          police_station: officer.police_station_name || "Chhavani Headquarters",
         },
       });
     }
 
-    // 2. ME ROUTE (GET /auth/me or GET /admin-auth/me)
-    if (req.method === "GET" && (path.endsWith("/me") || path.includes("/me"))) {
+    // 2. ME ROUTE (GET /admin-auth/me)
+    if (req.method === "GET" && path.endsWith("/me")) {
       const authUser = await verifyOfficerToken(req);
       if (!authUser) {
         return sendError("Unauthorized access", null, 401);
       }
 
-      if (authUser.username === "pcmsadmin" || authUser.role === "SuperAdmin") {
-        return sendSuccess("Super Admin profile retrieved", {
-          id: authUser.id,
-          full_name: authUser.full_name || "Super Admin Authority",
-          username: "pcmsadmin",
-          role: "SuperAdmin",
-          access_scope: "ALL",
-          police_station: "Chhavani Headquarters",
-        });
-      }
-
-      const { data: officer } = await supabase
-        .from("officers")
-        .select("*")
-        .eq("id", authUser.id)
-        .single();
-
-      if (!officer) {
-        return sendError("Officer profile not found", null, 404);
-      }
-
-      return sendSuccess("Officer profile retrieved", officer);
+      return sendSuccess("Admin profile retrieved", {
+        id: authUser.id,
+        full_name: authUser.full_name || "Super Admin Authority",
+        username: authUser.username,
+        role: authUser.role || "SuperAdmin",
+        access_scope: authUser.access_scope || "ALL",
+      });
     }
 
     return sendError("Route not found", null, 404);

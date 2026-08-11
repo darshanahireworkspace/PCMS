@@ -33,12 +33,18 @@ const API = axios.create({
 
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("policeToken");
+    const adminToken = localStorage.getItem("pcms_admin_token");
+    const officerToken = localStorage.getItem("policeToken");
+    const token = adminToken || officerToken;
+
     const anonKey =
       import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
       import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-    if (anonKey && (config.baseURL?.includes("supabase.co") || config.url?.includes("supabase.co"))) {
+    if (
+      anonKey &&
+      (config.baseURL?.includes("supabase.co") || config.url?.includes("supabase.co"))
+    ) {
       config.headers["apikey"] = anonKey;
     }
 
@@ -76,9 +82,14 @@ API.interceptors.response.use(
     if (error.response?.status === 401) {
       const requestUrl = error.config?.url || "";
 
-      if (!requestUrl.includes("/auth/login")) {
-        localStorage.removeItem("policeToken");
-        localStorage.removeItem("policeOfficer");
+      if (!requestUrl.includes("/auth/login") && !requestUrl.includes("/admin-auth/login")) {
+        if (localStorage.getItem("pcms_admin_token")) {
+          localStorage.removeItem("pcms_admin_token");
+          localStorage.removeItem("pcms_admin_user");
+        } else {
+          localStorage.removeItem("policeToken");
+          localStorage.removeItem("policeOfficer");
+        }
       }
     }
 

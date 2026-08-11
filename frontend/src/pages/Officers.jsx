@@ -20,8 +20,8 @@ function Officers() {
         {
           id: "1",
           full_name: "Admin Officer",
-          username: "7720075275",
-          email: "7720075275@pcms.gov.in",
+          username: "officer_chhavani",
+          email: "officer@pcms.gov.in",
           role: "Admin",
           police_station_name: "Chhavani Police Station",
           status: "Active",

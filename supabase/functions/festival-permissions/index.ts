@@ -4,8 +4,6 @@ import { supabase } from "../_shared/supabaseClient.ts";
 import { sendSuccess, sendError } from "../_shared/response.ts";
 import { verifyOfficerToken } from "../_shared/auth.ts";
 
-const BUCKET_NAME = "city-management-photos";
-
 const isValidUuid = (val: unknown): boolean => {
   if (!val || typeof val !== "string") return false;
   const trimmed = val.trim();
@@ -107,6 +105,8 @@ serve(async (req: Request) => {
   const id = lastPart !== "festival-permissions" && lastPart !== "v1" ? lastPart : null;
 
   try {
+    const authUser = await verifyOfficerToken(req);
+
     // 1. GET ALL OR SINGLE
     if (req.method === "GET") {
       if (id) {
@@ -134,6 +134,15 @@ serve(async (req: Request) => {
       if (status) query = query.eq("permission_status", status);
       if (riskLevel) query = query.eq("risk_level", riskLevel);
 
+      // Access Scope Filtering
+      if (authUser && authUser.role !== "SuperAdmin" && authUser.role !== "HeadOfficer" && authUser.access_scope !== "ALL") {
+        if (authUser.access_scope === "TEAM" && authUser.team_id) {
+          query = query.or(`created_by.eq.${authUser.id},assigned_officer.eq.${authUser.id},team_id.eq.${authUser.team_id}`);
+        } else {
+          query = query.or(`created_by.eq.${authUser.id},assigned_officer.eq.${authUser.id}`);
+        }
+      }
+
       const { data, error, count } = await query;
       if (error) throw error;
 
@@ -144,9 +153,6 @@ serve(async (req: Request) => {
 
       return sendSuccess("Festival permissions retrieved successfully", formatted, { count: count || 0 });
     }
-
-    // AUTH CHECK FOR WRITE OPERATIONS
-    const authUser = await verifyOfficerToken(req);
 
     // 2. CREATE (POST)
     if (req.method === "POST") {
@@ -165,6 +171,8 @@ serve(async (req: Request) => {
       const rawPayload = sanitizeFestivalPayload(body);
       const record = {
         ...rawPayload,
+        created_by: authUser?.id || null,
+        team_id: authUser?.team_id || null,
         assigned_officer: authUser?.id || rawPayload.assigned_officer || null,
         verification_status: rawPayload.verification_status || "Pending",
         permission_status: rawPayload.permission_status || "Pending",
@@ -177,6 +185,20 @@ serve(async (req: Request) => {
 
       const { data, error } = await supabase.from("festival_permissions").insert([record]).select().single();
       if (error) throw error;
+
+      if (authUser?.id && data?.id) {
+        await supabase.from("audit_logs").insert([
+          {
+            user_id: authUser.id,
+            user_name: authUser.username,
+            action: "CREATE_FESTIVAL_PERMISSION",
+            entity_type: "festival_permissions",
+            entity_id: data.id,
+            description: `Created festival permission for ${data.organizer_name || data.festival_name}`,
+          },
+        ]);
+      }
+
       return sendSuccess("Festival permission created successfully", data, {}, 201);
     }
 
@@ -198,6 +220,20 @@ serve(async (req: Request) => {
 
       const { data, error } = await supabase.from("festival_permissions").update(rawPayload).eq("id", id).select().single();
       if (error) throw error;
+
+      if (authUser?.id) {
+        await supabase.from("audit_logs").insert([
+          {
+            user_id: authUser.id,
+            user_name: authUser.username,
+            action: "UPDATE_FESTIVAL_PERMISSION",
+            entity_type: "festival_permissions",
+            entity_id: id,
+            description: `Updated festival permission for ${data.organizer_name || data.festival_name}`,
+          },
+        ]);
+      }
+
       return sendSuccess("Festival permission updated successfully", data);
     }
 
@@ -205,6 +241,20 @@ serve(async (req: Request) => {
     if (req.method === "DELETE" && id) {
       const { error } = await supabase.from("festival_permissions").delete().eq("id", id);
       if (error) throw error;
+
+      if (authUser?.id) {
+        await supabase.from("audit_logs").insert([
+          {
+            user_id: authUser.id,
+            user_name: authUser.username,
+            action: "DELETE_FESTIVAL_PERMISSION",
+            entity_type: "festival_permissions",
+            entity_id: id,
+            description: `Deleted festival permission ID ${id}`,
+          },
+        ]);
+      }
+
       return sendSuccess("Festival permission deleted successfully");
     }
 

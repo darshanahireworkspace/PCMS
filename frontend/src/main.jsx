@@ -7,6 +7,7 @@ import "./i18n";
 import "./index.css";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
+import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { syncOfflineQueue } from "./services/offlineQueue";
 
 window.addEventListener("online", () => {
@@ -16,8 +17,10 @@ window.addEventListener("online", () => {
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <AuthProvider>
-      <App />
-      <Toaster position="top-right" />
+      <AdminAuthProvider>
+        <App />
+        <Toaster position="top-right" />
+      </AdminAuthProvider>
     </AuthProvider>
   </BrowserRouter>
 );

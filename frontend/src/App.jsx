@@ -17,6 +17,16 @@ import Settings from "./pages/Settings";
 import PoliceStations from "./pages/PoliceStations";
 import OtherPlaces from "./pages/OtherPlaces";
 
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import OfficersManagement from "./pages/admin/OfficersManagement";
+import TeamsManagement from "./pages/admin/TeamsManagement";
+import AccessControl from "./pages/admin/AccessControl";
+import DuplicateReview from "./pages/admin/DuplicateReview";
+import AuditLogs from "./pages/admin/AuditLogs";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminProtectedRoute from "./routes/AdminProtectedRoute";
+
 import Layout from "./components/layout/Layout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import useAuth from "./hooks/useAuth";
@@ -61,6 +71,21 @@ function App() {
         }
       />
 
+      {/* ADMIN ROUTES */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route element={<AdminProtectedRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/officers" element={<OfficersManagement />} />
+          <Route path="/admin/teams" element={<TeamsManagement />} />
+          <Route path="/admin/access-control" element={<AccessControl />} />
+          <Route path="/admin/duplicate-review" element={<DuplicateReview />} />
+          <Route path="/admin/audit-logs" element={<AuditLogs />} />
+        </Route>
+      </Route>
+
+      {/* OFFICER COMMAND ROUTES */}
       <Route
         element={
           <ProtectedRoute>

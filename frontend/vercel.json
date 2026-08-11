@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/((?!manifest\\.webmanifest|sw\\.js|registerSW\\.js|favicon\\.ico|police-logo\\.png|icon-192\\.png|icon-512\\.png|assets/|.*\\.[a-zA-Z0-9]+$).*)",
+      "source": "/((?!manifest\\.webmanifest|admin-manifest\\.webmanifest|sw\\.js|registerSW\\.js|favicon\\.ico|police-logo\\.png|icon-192\\.png|icon-512\\.png|assets/|.*\\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }
   ]

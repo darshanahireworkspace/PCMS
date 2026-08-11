@@ -23,3 +23,15 @@ export const deleteReligiousPlace = (id) => {
 export const updateReligiousPlace = (id, data) => {
   return API.put(`/religious-places/${id}`, data);
 };
+
+export const checkDuplicatePlace = (data) => {
+  return API.post("/religious-places/check-duplicate", data);
+};
+
+export const recordPlaceVisit = (data) => {
+  return API.post("/visits", data);
+};
+
+export const getPlaceVisits = (placeId) => {
+  return API.get(`/visits?place_id=${placeId}`);
+};

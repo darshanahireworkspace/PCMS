@@ -18,6 +18,8 @@ import {
   createReligiousPlace,
   getSingleReligiousPlace,
   updateReligiousPlace,
+  checkDuplicatePlace,
+  recordPlaceVisit,
 } from "../api/religiousPlaceApi";
 import { getPoliceStations } from "../api/policeStationApi";
 
@@ -32,6 +34,11 @@ function AddReligiousPlace() {
   const [imagePreview, setImagePreview] = useState("");
   const [policeStations, setPoliceStations] = useState([]);
   const [cctvAvailable, setCctvAvailable] = useState("No");
+
+  const [duplicateModalData, setDuplicateModalData] = useState(null);
+  const [showVisitModal, setShowVisitModal] = useState(false);
+  const [visitNotes, setVisitNotes] = useState("");
+  const [savingVisit, setSavingVisit] = useState(false);
 
   const [form, setForm] = useState({
     place_name: "",
@@ -243,6 +250,25 @@ function AddReligiousPlace() {
     try {
       setLoading(true);
 
+      // Perform duplicate location check when creating new place
+      if (!isEditMode) {
+        try {
+          const dupRes = await checkDuplicatePlace({
+            latitude: form.latitude,
+            longitude: form.longitude,
+            place_name: form.place_name,
+          });
+
+          if (dupRes.data?.data?.isDuplicate) {
+            setLoading(false);
+            setDuplicateModalData(dupRes.data.data.existingPlace);
+            return;
+          }
+        } catch (dupErr) {
+          console.warn("Duplicate check warning:", dupErr);
+        }
+      }
+
       const isCctv = cctvAvailable === "Yes";
       const countVal = isCctv ? parseInt(form.cctv_count || "0", 10) : 0;
 
@@ -279,10 +305,30 @@ function AddReligiousPlace() {
       if (error.response?.status === 409) {
         toast.error("This religious place already exists");
       } else {
-        toast.error(error.response?.data?.message || "Failed to save record");
+        toast.error(error.response?.data?.message || "Failed to save religious place");
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRecordVisitSubmit = async (e) => {
+    e.preventDefault();
+    if (!duplicateModalData?.id) return;
+    try {
+      setSavingVisit(true);
+      await recordPlaceVisit({
+        place_id: duplicateModalData.id,
+        entity_type: "religious_place",
+        notes: visitNotes || "Officer verification visit recorded",
+        photo: imagePreview || null,
+      });
+      toast.success("Verification Visit Recorded Successfully");
+      setShowVisitModal(false);
+      setDuplicateModalData(null);
+      navigate("/religious-places");
+    } finally {
+      setSavingVisit(false);
     }
   };
 
@@ -717,6 +763,110 @@ function AddReligiousPlace() {
           </button>
         </div>
       </form>
+
+      {/* DUPLICATE LOCATION WARNING MODAL */}
+      {duplicateModalData && !showVisitModal && (
+        <div className="modal-overlay">
+          <div className="admin-modal-card">
+            <div className="modal-header bg-amber-light">
+              <div className="flex-items-center gap-2">
+                <ShieldAlert size={22} className="text-amber" />
+                <h3 className="text-amber">Already Registered Location</h3>
+              </div>
+            </div>
+
+            <div className="p-4">
+              <p className="mb-3">
+                A master religious place record already exists at or near this location:
+              </p>
+
+              <div className="duplicate-details-card">
+                {duplicateModalData.photo_url || duplicateModalData.image_url ? (
+                  <img
+                    src={duplicateModalData.photo_url || duplicateModalData.image_url}
+                    alt={duplicateModalData.place_name}
+                    className="duplicate-place-img"
+                  />
+                ) : null}
+
+                <div className="duplicate-info">
+                  <h4>{duplicateModalData.place_name}</h4>
+                  <p className="text-muted">{duplicateModalData.place_type} • {duplicateModalData.address || duplicateModalData.area || "Chhavani"}</p>
+                  <p className="small mt-2">
+                    <b>Registered By:</b> {duplicateModalData.creator_name || "Police Officer"}
+                    <br />
+                    <b>Total Visits:</b> {duplicateModalData.visit_count || 1}
+                  </p>
+                </div>
+              </div>
+
+              <div className="modal-actions mt-4">
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => {
+                    setDuplicateModalData(null);
+                    navigate("/religious-places");
+                  }}
+                >
+                  [ View Existing Record ]
+                </button>
+                <button
+                  type="button"
+                  className="primary-btn"
+                  onClick={() => setShowVisitModal(true)}
+                >
+                  [ Add Verification / Visit ]
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* RECORD VISIT VERIFICATION MODAL */}
+      {duplicateModalData && showVisitModal && (
+        <div className="modal-overlay">
+          <div className="admin-modal-card compact">
+            <div className="modal-header">
+              <h3>Record Verification / Visit</h3>
+            </div>
+
+            <form onSubmit={handleRecordVisitSubmit} className="admin-form p-4">
+              <p className="text-muted mb-3">
+                Recording secondary officer visit for <b>{duplicateModalData.place_name}</b>:
+              </p>
+
+              <div className="form-group">
+                <label>Visit Notes / Observations</label>
+                <textarea
+                  rows="3"
+                  value={visitNotes}
+                  onChange={(e) => setVisitNotes(e.target.value)}
+                  placeholder="Enter visit verification notes..."
+                  required
+                ></textarea>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={() => {
+                    setShowVisitModal(false);
+                    setDuplicateModalData(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="primary-btn" disabled={savingVisit}>
+                  {savingVisit ? "Recording Visit..." : "Submit Verification Visit"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

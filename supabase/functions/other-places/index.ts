@@ -50,6 +50,8 @@ serve(async (req: Request) => {
   const id = lastPart !== "other-places" && lastPart !== "v1" ? lastPart : null;
 
   try {
+    const authUser = await verifyOfficerToken(req);
+
     // 1. GET ALL OR SINGLE
     if (req.method === "GET") {
       if (id) {
@@ -62,13 +64,19 @@ serve(async (req: Request) => {
       const category = url.searchParams.get("category");
       if (category) query = query.eq("category", category);
 
+      // Access Scope Filtering
+      if (authUser && authUser.role !== "SuperAdmin" && authUser.role !== "HeadOfficer" && authUser.access_scope !== "ALL") {
+        if (authUser.access_scope === "TEAM" && authUser.team_id) {
+          query = query.or(`created_by.eq.${authUser.id},team_id.eq.${authUser.team_id}`);
+        } else {
+          query = query.eq("created_by", authUser.id);
+        }
+      }
+
       const { data, error, count } = await query;
       if (error) throw error;
       return sendSuccess("Other places retrieved successfully", data || [], { count: count || 0 });
     }
-
-    // AUTH CHECK FOR WRITE OPERATIONS
-    const authUser = await verifyOfficerToken(req);
 
     // 2. CREATE (POST)
     if (req.method === "POST") {
@@ -89,11 +97,26 @@ serve(async (req: Request) => {
         ...body,
         photo_url: photoUrl,
         created_by: authUser?.id || null,
+        team_id: authUser?.team_id || null,
       };
       delete record.photo;
 
       const { data, error } = await supabase.from("other_places").insert([record]).select().single();
       if (error) throw error;
+
+      if (authUser?.id && data?.id) {
+        await supabase.from("audit_logs").insert([
+          {
+            user_id: authUser.id,
+            user_name: authUser.username,
+            action: "CREATE_OTHER_PLACE",
+            entity_type: "other_places",
+            entity_id: data.id,
+            description: `Created other place record ${data.place_name}`,
+          },
+        ]);
+      }
+
       return sendSuccess("Other place created successfully", data, {}, 201);
     }
 
@@ -120,6 +143,20 @@ serve(async (req: Request) => {
 
       const { data, error } = await supabase.from("other_places").update(record).eq("id", id).select().single();
       if (error) throw error;
+
+      if (authUser?.id) {
+        await supabase.from("audit_logs").insert([
+          {
+            user_id: authUser.id,
+            user_name: authUser.username,
+            action: "UPDATE_OTHER_PLACE",
+            entity_type: "other_places",
+            entity_id: id,
+            description: `Updated other place record ${data.place_name}`,
+          },
+        ]);
+      }
+
       return sendSuccess("Other place updated successfully", data);
     }
 
@@ -127,6 +164,20 @@ serve(async (req: Request) => {
     if (req.method === "DELETE" && id) {
       const { error } = await supabase.from("other_places").delete().eq("id", id);
       if (error) throw error;
+
+      if (authUser?.id) {
+        await supabase.from("audit_logs").insert([
+          {
+            user_id: authUser.id,
+            user_name: authUser.username,
+            action: "DELETE_OTHER_PLACE",
+            entity_type: "other_places",
+            entity_id: id,
+            description: `Deleted other place ID ${id}`,
+          },
+        ]);
+      }
+
       return sendSuccess("Other place deleted successfully");
     }
 

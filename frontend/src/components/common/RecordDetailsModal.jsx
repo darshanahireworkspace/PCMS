@@ -481,6 +481,20 @@ function RecordDetailsModal({ record, onClose, onEdit }) {
             )}
           </div>
 
+          {/* VISIT HISTORY & DATA OWNERSHIP SECTION */}
+          <div className="modal-notes-card mt-3">
+            <label><Clock size={14} /> Data Ownership & Visit History</label>
+            <div className="small text-muted mb-2">
+              <span><b>Registered By:</b> {record.creator_name || "Police Officer"}</span>
+              {record.created_at ? <span> • Registered Date: {new Date(record.created_at).toLocaleDateString("en-IN")}</span> : null}
+            </div>
+            {record.visit_count ? (
+              <div className="badge badge-info mb-2">
+                Total Officer Visits / Verifications: {record.visit_count}
+              </div>
+            ) : null}
+          </div>
+
           {/* NOTES BLOCK */}
           {(record.notes || record.sensitive_notes || record.police_notes) && (
             <div className="modal-notes-card">
