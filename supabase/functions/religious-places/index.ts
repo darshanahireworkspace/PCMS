@@ -70,8 +70,22 @@ serve(async (req: Request) => {
     const authUser = await verifyOfficerToken(req);
 
     // DUPLICATE LOCATION CHECK ENDPOINT (POST /religious-places/check-duplicate)
-    if (req.method === "POST" && pathParts.includes("check-duplicate")) {
-      const body = await req.json();
+    if (req.method === "POST" && (pathParts.includes("check-duplicate") || url.pathname.endsWith("/check-duplicate"))) {
+      let body: Record<string, unknown> = {};
+      try {
+        const contentType = req.headers.get("content-type") || "";
+        if (contentType.includes("multipart/form-data")) {
+          const formData = await req.formData();
+          formData.forEach((val, key) => {
+            body[key] = val;
+          });
+        } else {
+          body = await req.json();
+        }
+      } catch {
+        body = {};
+      }
+
       const lat = Number(body.latitude);
       const lng = Number(body.longitude);
       const name = String(body.place_name || "").trim().toLowerCase();
