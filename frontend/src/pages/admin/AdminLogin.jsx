@@ -66,7 +66,7 @@ function AdminLogin() {
     };
   }, []);
 
-  // Dynamic route-aware PWA manifest switcher for Admin console
+  // Dynamic route-aware PWA manifest & iOS Safari switcher for Admin console
   useEffect(() => {
     let link = document.getElementById("app-manifest");
     if (!link) {
@@ -77,8 +77,26 @@ function AdminLogin() {
     }
     link.setAttribute("href", "/admin-manifest.webmanifest");
 
+    const prevTitle = document.title;
+    document.title = "Super Admin | मालेगाव शहर पोलीस";
+
+    let appleTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!appleTitleMeta) {
+      appleTitleMeta = document.createElement("meta");
+      appleTitleMeta.setAttribute("name", "apple-mobile-web-app-title");
+      document.head.appendChild(appleTitleMeta);
+    }
+    const prevAppleTitle = appleTitleMeta.getAttribute("content");
+    appleTitleMeta.setAttribute("content", "Super Admin");
+
     return () => {
       link.setAttribute("href", "/manifest.webmanifest");
+      document.title = prevTitle || "मालेगाव शहर पोलीस व्यवस्थापन प्रणाली";
+      if (prevAppleTitle) {
+        appleTitleMeta.setAttribute("content", prevAppleTitle);
+      } else {
+        appleTitleMeta.setAttribute("content", "Malegaon Police");
+      }
     };
   }, []);
 

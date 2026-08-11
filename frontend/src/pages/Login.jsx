@@ -42,6 +42,26 @@ function Login() {
     (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream);
 
   useEffect(() => {
+    // Dynamic route-aware PWA manifest & iOS Safari title for Normal Officer App
+    let link = document.getElementById("app-manifest");
+    if (!link) {
+      link = document.createElement("link");
+      link.id = "app-manifest";
+      link.rel = "manifest";
+      document.head.appendChild(link);
+    }
+    link.setAttribute("href", "/manifest.webmanifest");
+
+    document.title = "Malegaon Police | छावणी पोलिस स्टेशन";
+
+    let appleTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!appleTitleMeta) {
+      appleTitleMeta = document.createElement("meta");
+      appleTitleMeta.setAttribute("name", "apple-mobile-web-app-title");
+      document.head.appendChild(appleTitleMeta);
+    }
+    appleTitleMeta.setAttribute("content", "Malegaon Police");
+
     localStorage.removeItem("username");
     localStorage.removeItem("password");
     localStorage.removeItem("loginUsername");
