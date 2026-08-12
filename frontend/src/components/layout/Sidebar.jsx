@@ -36,7 +36,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             className="sidebar-logo"
           />
           <div className="sidebar-brand-text">
-            <h2>Chhavani Police</h2>
+            <h2>मालेगाव पोलीस</h2>
             <span>Malegaon City System</span>
           </div>
         </div>

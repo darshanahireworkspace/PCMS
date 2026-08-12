@@ -42,7 +42,7 @@ const getPageMeta = (pathname) => {
   if (pathname.includes("/settings")) {
     return { title: "System Settings", section: "Configuration" };
   }
-  return { title: "Chhavani Police Command", section: "Malegaon City" };
+  return { title: "Malegaon Police Command", section: "Malegaon City" };
 };
 
 function Topbar({ setSidebarOpen }) {
@@ -106,7 +106,7 @@ function Topbar({ setSidebarOpen }) {
           <div className="topbar-user-details">
             <span className="topbar-user-name">{officer?.full_name || "Officer"}</span>
             <span className="topbar-user-station">
-              {isSuperAdmin ? "Global Data Access" : (officer?.police_station || "Chhavani PS")}
+              {isSuperAdmin ? "Global Data Access" : (officer?.police_station || "Malegaon PS")}
             </span>
           </div>
         </div>

@@ -183,7 +183,7 @@ function Login() {
           </div>
 
           <h1 className="hero-heading">Police City Management System</h1>
-          <h2 className="hero-subheading">छावणी पोलिस स्टेशन, मालेगाव</h2>
+          <h2 className="hero-subheading">मालेगाव पोलीस</h2>
 
           <p className="hero-description">
             Official command & intelligence system for live monitoring of religious places, festival permissions, and city security infrastructure.
@@ -236,7 +236,7 @@ function Login() {
                 <img src={policeLogo} alt="Logo" />
               </div>
               <div className="card-title-block">
-                <h3>छावणी पोलिस स्टेशन</h3>
+                <h3>मालेगाव पोलीस</h3>
                 <p>पोलीस अधिकारी लॉगिन सिस्टीम</p>
               </div>
             </div>
