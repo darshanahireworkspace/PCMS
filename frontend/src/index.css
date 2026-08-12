@@ -540,7 +540,19 @@ input, select, textarea {
   align-items: center;
   padding-left: 6px;
   padding-right: 6px;
-  transform: none !important;
+  transform: translateZ(0) !important;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Prevent navbar from jumping/flickering above mobile software keyboard during input entry */
+@media (max-width: 1023px) {
+  body:has(input:focus, textarea:focus, select:focus) .mobile-bottom-nav {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateY(100%) !important;
+    transition: opacity 0.15s ease, transform 0.15s ease !important;
+  }
 }
 
 .mobile-bottom-nav a {
