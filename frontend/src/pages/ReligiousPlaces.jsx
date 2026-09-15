@@ -168,9 +168,9 @@ function ReligiousPlaces() {
     <div>
       <div className="page-header">
         <div>
-          <h2 className="page-title">Religious Places Database</h2>
+          <h2 className="page-title">धार्मिक स्थळे डेटाबेस</h2>
           <p className="page-subtitle">
-            Live permanent religious locations registered in Malegaon City.
+            मालेगाव शहरातील नोंदणीकृत मंदिरे, मशिदी, दर्गा व इतर धार्मिक स्थळांची अधिकृत सूची.
           </p>
         </div>
 
@@ -178,10 +178,10 @@ function ReligiousPlaces() {
           <button
             className="secondary-btn"
             type="button"
-            onClick={() => toast.success("Exporting Excel file...")}
+            onClick={() => toast.success("एक्सेल फाईल डाउनलोड होत आहे...")}
           >
             <Download size={18} />
-            Export Excel
+            एक्सेल डाउनलोड
           </button>
 
           <button
@@ -190,7 +190,7 @@ function ReligiousPlaces() {
             onClick={() => navigate("/add-religious-place")}
           >
             <Plus size={18} />
-            Add Religious Place
+            नवीन धार्मिक स्थळ जोडा
           </button>
         </div>
       </div>
@@ -202,13 +202,13 @@ function ReligiousPlaces() {
             name="search"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search mandir, masjid, dargah, area, contact..."
+            placeholder="मंदिर, मशीद, दर्गा, परिसर किंवा संपर्क व्यक्तीच्या नावाने शोधा..."
           />
         </div>
 
         <button className="filter-btn" type="button">
           <Filter size={18} />
-          Filter
+          फिल्टर
         </button>
       </div>
 
@@ -217,26 +217,26 @@ function ReligiousPlaces() {
           <table className="professional-table">
             <thead>
               <tr>
-                <th>Photo</th>
-                <th>Place Name</th>
-                <th>Type & Religion</th>
-                <th>Area / Ward</th>
-                <th>Contact Person</th>
-                <th>Mobile</th>
-                <th>Risk</th>
-                <th>Police Station</th>
-                <th>Actions</th>
+                <th>फोटो</th>
+                <th>स्थळाचे नाव</th>
+                <th>प्रकार व धर्म</th>
+                <th>परिसर / प्रभाग</th>
+                <th>संपर्क व्यक्ती</th>
+                <th>मोबाईल नंबर</th>
+                <th>धोका पातळी</th>
+                <th>पोलीस ठाणे</th>
+                <th>कृती</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="9">Loading records...</td>
+                  <td colSpan="9">डेटा लोड होत आहे...</td>
                 </tr>
               ) : filteredPlaces.length === 0 ? (
                 <tr>
-                  <td colSpan="9">No religious place records found.</td>
+                  <td colSpan="9">कोणतीही धार्मिक स्थळ नोंद आढळली नाही.</td>
                 </tr>
               ) : (
                 filteredPlaces.map((place) => {

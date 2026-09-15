@@ -202,8 +202,16 @@ function OtherPlaces() {
         setLocationLoading(false);
         toast.success("Location auto-detected");
       },
-      () => {
-        toast.error("Please allow location permission");
+      (err) => {
+        if (err.code === 1) {
+          toast.error("स्थान परवानगी नाकारली आहे. कृपया ब्राउझर सेटिंग्जमधून लोकेशन सुरू करा.");
+        } else if (err.code === 2) {
+          toast.error("GPS सिग्नल उपलब्ध नाही. कृपया डिव्हाइसचे लोकेशन सुरू करा.");
+        } else if (err.code === 3) {
+          toast.error("लोकेशन शोधण्यात वेळ लागला. कृपया पुन्हा प्रयत्न करा.");
+        } else {
+          toast.error("लोकेशन मिळवण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा.");
+        }
         setLocationLoading(false);
       },
       { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
@@ -294,9 +302,9 @@ function OtherPlaces() {
     <div className="other-places-page">
       <div className="page-header">
         <div>
-          <h2 className="page-title">City Infrastructure Directory</h2>
+          <h2 className="page-title">इतर महत्त्वाची स्थळे (City Infrastructure)</h2>
           <p className="page-subtitle">
-            Store hotels, medicals, shops, Amruttulya, mobile shops, hospitals, ATMs and civic locations.
+            हॉटेल्स, अमृततुल्य, मेडीकल, दुकाने, मोबाईल शॉपी, दवाखाने, बँका, एटीएम व इतर व्यावसायिक स्थळांची नोंद ठेवा.
           </p>
         </div>
 
@@ -307,7 +315,7 @@ function OtherPlaces() {
           disabled={locationLoading}
         >
           <Navigation size={18} />
-          {locationLoading ? "Detecting..." : "Detect Current Location"}
+          {locationLoading ? "स्थान शोधत आहे..." : "सध्याचे स्थान मिळवा (GPS)"}
         </button>
       </div>
 
@@ -317,38 +325,38 @@ function OtherPlaces() {
           <div className="section-title">
             <Store size={20} />
             <div>
-              <h3>01. Place Information</h3>
-              <p>Commercial or civic place identification and category</p>
+              <h3>विभाग १ — स्थळाची प्राथमिक माहिती</h3>
+              <p>व्यावसायिक किंवा नागरी ठिकाणाची ओळख व प्रकार</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label>Place Name *</label>
+              <label>प्रतिष्ठान / स्थळाचे नाव *</label>
               <input
                 type="text"
                 name="place_name"
                 value={form.place_name}
                 onChange={handleChange}
-                placeholder="e.g. Sai Amruttulya / City Hospital"
+                placeholder="उदा. साई अमृततुल्य / सिटी हॉस्पिटल / न्यू मोबाईल शॉपी"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Category *</label>
+              <label>प्रकार / वर्गवारी *</label>
               <select name="category" value={form.category} onChange={handleChange}>
-                <option value="Amruttulya">Amruttulya</option>
-                <option value="Hotel">Hotel</option>
-                <option value="Medical">Medical / Pharmacy</option>
-                <option value="Mobile Shop">Mobile Shop</option>
-                <option value="Cloth Shop">Cloth Shop</option>
-                <option value="Grocery">Grocery / Kirana</option>
-                <option value="Garage">Garage / Workshop</option>
-                <option value="School">School / College</option>
-                <option value="Hospital">Hospital / Clinic</option>
-                <option value="ATM">ATM / Bank</option>
-                <option value="Other">Other</option>
+                <option value="Amruttulya">अमृततुल्य / चहा कॅफे (Amruttulya)</option>
+                <option value="Hotel">हॉटेल / लॉज / रेस्टॉरंट (Hotel / Lodge)</option>
+                <option value="Medical">मेडीकल / फार्मसी (Medical Store)</option>
+                <option value="Mobile Shop">मोबाईल शॉपी (Mobile Shop)</option>
+                <option value="Cloth Shop">कापड दुकान (Cloth Shop)</option>
+                <option value="Grocery">किराणा दुकान / सुपरमार्केट (Grocery)</option>
+                <option value="Garage">गॅरेज / वर्कशॉप (Garage / Auto)</option>
+                <option value="School">शाळा / कॉलेज / क्लास (School / College)</option>
+                <option value="Hospital">दवाखाना / हॉस्पिटल / लॅब (Hospital / Clinic)</option>
+                <option value="ATM">एटीएम / बँक (ATM / Bank)</option>
+                <option value="Other">इतर व्यावसायिक स्थळ (Other)</option>
               </select>
             </div>
           </div>
@@ -359,31 +367,31 @@ function OtherPlaces() {
           <div className="section-title">
             <Phone size={20} />
             <div>
-              <h3>02. Owner & Contact Information</h3>
-              <p>Primary owner / manager and contact details</p>
+              <h3>विभाग २ — मालक व संपर्क तपशील</h3>
+              <p>मुख्य मालक / व्यवस्थापकाचे नाव व फोन नंबर</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label>Owner / Contact Person</label>
+              <label>मालक / व्यवस्थापकाचे नाव</label>
               <input
                 type="text"
                 name="owner_name"
                 value={form.owner_name}
                 onChange={handleChange}
-                placeholder="Owner or manager full name"
+                placeholder="मालकाचे किंवा मॅनेजरचे पूर्ण नाव"
               />
             </div>
 
             <div className="form-group">
-              <label>Contact Mobile Number</label>
+              <label>मोबाईल नंबर</label>
               <input
                 type="tel"
                 name="mobile"
                 value={form.mobile}
                 onChange={handleChange}
-                placeholder="10-digit mobile number"
+                placeholder="१० अंकी मोबाईल नंबर"
               />
             </div>
           </div>
@@ -394,53 +402,53 @@ function OtherPlaces() {
           <div className="section-title">
             <MapPin size={20} />
             <div>
-              <h3>03. Location & Address</h3>
-              <p>Area, street address and GIS GPS coordinates</p>
+              <h3>विभाग ३ — ठिकाण व पत्ता</h3>
+              <p>परिसर, रस्त्याचा पत्ता व नकाशासाठी जीपीएस स्थान</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label>Area / Locality</label>
+              <label>परिसर / प्रभाग</label>
               <input
                 type="text"
                 name="area"
                 value={form.area}
                 onChange={handleChange}
-                placeholder="Locality area"
+                placeholder="उदा. कॉलेज रोड, बस स्टँड जवळ"
               />
             </div>
 
             <div className="form-group full-width">
-              <label>Full Address</label>
+              <label>पूर्ण पत्ता</label>
               <textarea
                 name="address"
                 rows={2}
                 value={form.address}
                 onChange={handleChange}
-                placeholder="Full address details..."
+                placeholder="दुकान नंबर, इमारतीचे नाव, रस्त्याचा पूर्ण पत्ता..."
               />
             </div>
 
             <div className="form-group">
-              <label>Latitude</label>
+              <label>अक्षांश (Latitude)</label>
               <input
                 type="text"
                 name="latitude"
                 value={form.latitude}
                 onChange={handleChange}
-                placeholder="e.g. 20.5579"
+                placeholder="उदा. 20.5579"
               />
             </div>
 
             <div className="form-group">
-              <label>Longitude</label>
+              <label>रेखांश (Longitude)</label>
               <input
                 type="text"
                 name="longitude"
                 value={form.longitude}
                 onChange={handleChange}
-                placeholder="e.g. 74.5287"
+                placeholder="उदा. 74.5287"
               />
             </div>
           </div>
@@ -451,8 +459,8 @@ function OtherPlaces() {
           <div className="section-title">
             <Camera size={20} />
             <div>
-              <h3>04. Shop / Place Photograph</h3>
-              <p>Upload a clear photo of the place storefront or entrance</p>
+              <h3>विभाग ४ — दुकानाचा / स्थळाचा फोटो</h3>
+              <p>प्रतिष्ठानाच्या मुख्य प्रवेशद्वाराचा किंवा बोर्डाचा स्पष्ट फोटो जोडा</p>
             </div>
           </div>
 
@@ -461,8 +469,8 @@ function OtherPlaces() {
               <div className="photo-upload-options-row">
                 <label className="upload-box camera-option-box">
                   <Camera size={30} className="upload-icon-teal" />
-                  <h4>Take Photo</h4>
-                  <p>Capture storefront using device camera</p>
+                  <h4>कॅमेऱ्याने फोटो काढा</h4>
+                  <p>मोबाईल कॅमेरा उघडा</p>
                   <input
                     type="file"
                     accept="image/*"
@@ -474,8 +482,8 @@ function OtherPlaces() {
 
                 <label className="upload-box gallery-option-box">
                   <Upload size={30} className="upload-icon-blue" />
-                  <h4>Choose from Gallery</h4>
-                  <p>JPG, PNG or WEBP (Max 5MB)</p>
+                  <h4>गॅलरीतून फोटो निवडा</h4>
+                  <p>JPG, PNG किंवा WEBP (कमाल 5MB)</p>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
@@ -490,7 +498,7 @@ function OtherPlaces() {
                 <div className="photo-preview-actions">
                   <label className="photo-change-btn">
                     <RefreshCw size={15} />
-                    <span>Change Photo</span>
+                    <span>फोटो बदला</span>
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
@@ -505,7 +513,7 @@ function OtherPlaces() {
                     onClick={removePhoto}
                   >
                     <Trash2 size={15} />
-                    <span>Remove</span>
+                    <span>काढून टाका</span>
                   </button>
                 </div>
               </div>
@@ -518,20 +526,20 @@ function OtherPlaces() {
           <div className="section-title">
             <Store size={20} />
             <div>
-              <h3>05. Police Notes</h3>
-              <p>Any additional police observations or details</p>
+              <h3>विभाग ५ — पोलीस शेरा व विशेष नोंदी</h3>
+              <p>अतिरिक्त पोलीस निरीक्षणे, सीसीटीव्ही किंवा सुरक्षिततेच्या नोंदी</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group full-width">
-              <label>Additional Notes</label>
+              <label>पोलीस शेरा</label>
               <textarea
                 name="notes"
                 rows={2}
                 value={form.notes}
                 onChange={handleChange}
-                placeholder="Police notes..."
+                placeholder="पोलीस नोंदी व शेरा लिहा..."
               />
             </div>
           </div>
@@ -546,10 +554,10 @@ function OtherPlaces() {
           >
             <Plus size={18} />
             {submitting
-              ? "Saving..."
+              ? "सेव्ह होत आहे..."
               : isEditMode
-              ? "Update Other Place"
-              : "Save Other Place"}
+              ? "माहिती अपडेट करा"
+              : "स्थळ नोंदणी सेव्ह करा"}
           </button>
         </div>
       </form>
@@ -562,7 +570,7 @@ function OtherPlaces() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search other city data by name, category, owner..."
+            placeholder="नाव, प्रकार, मालक किंवा परिसरावरून शोधा..."
           />
         </div>
       </div>
@@ -572,20 +580,20 @@ function OtherPlaces() {
           <table className="professional-table">
             <thead>
               <tr>
-                <th>Photo</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Area</th>
-                <th>Owner</th>
-                <th>Mobile</th>
-                <th>Actions</th>
+                <th>फोटो</th>
+                <th>स्थळाचे नाव</th>
+                <th>प्रकार</th>
+                <th>परिसर</th>
+                <th>मालकाचे नाव</th>
+                <th>मोबाईल नंबर</th>
+                <th>कृती</th>
               </tr>
             </thead>
 
             <tbody>
               {filteredPlaces.length === 0 ? (
                 <tr>
-                  <td colSpan="7">No records found.</td>
+                  <td colSpan="7">कोणतीही नोंद आढळली नाही.</td>
                 </tr>
               ) : (
                 filteredPlaces.map((item) => {
@@ -625,7 +633,7 @@ function OtherPlaces() {
                         <div className="action-group">
                           <button
                             type="button"
-                            title="View details"
+                            title="तपशील पहा"
                             onClick={() => setSelectedOther(item)}
                           >
                             <Eye size={16} />
@@ -633,7 +641,7 @@ function OtherPlaces() {
 
                           <button
                             type="button"
-                            title="Edit record"
+                            title="माहिती संपादित करा"
                             onClick={() =>
                               navigate(`/edit-other-place/${item.id}`)
                             }
@@ -643,7 +651,7 @@ function OtherPlaces() {
 
                           <button
                             type="button"
-                            title="Delete record"
+                            title="नोंद हटवा"
                             className="danger-action"
                             onClick={() => handleDelete(item.id)}
                           >

@@ -144,7 +144,7 @@ function FestivalPermissions() {
         return (
           <span className="status-badge approved" style={{ background: "#dcfce7", color: "#166534", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>
             <CheckCircle size={13} style={{ marginRight: 4, display: "inline-block" }} />
-            Approved
+            मंजूर (Approved)
           </span>
         );
       case "REJECTED":
@@ -153,21 +153,21 @@ function FestivalPermissions() {
         return (
           <span className="status-badge rejected" style={{ background: "#fee2e2", color: "#991b1b", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>
             <XCircle size={13} style={{ marginRight: 4, display: "inline-block" }} />
-            {status}
+            नाकारले ({status})
           </span>
         );
       case "COMPLETED":
         return (
           <span className="status-badge completed" style={{ background: "#dbeafe", color: "#1e40af", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>
             <CheckCircle size={13} style={{ marginRight: 4, display: "inline-block" }} />
-            Completed
+            पूर्ण (Completed)
           </span>
         );
       default:
         return (
           <span className="status-badge pending" style={{ background: "#fef3c7", color: "#92400e", padding: "4px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>
             <Clock size={13} style={{ marginRight: 4, display: "inline-block" }} />
-            Pending
+            प्रलंबित (Pending)
           </span>
         );
     }
@@ -177,9 +177,9 @@ function FestivalPermissions() {
     <div>
       <div className="page-header">
         <div>
-          <h2 className="page-title">Festival Permission Database</h2>
+          <h2 className="page-title">सण व उत्सव परवानग्या डेटाबेस</h2>
           <p className="page-subtitle">
-            Live festival permissions, mandal registrations and procession permits.
+            मालेगाव शहरातील विविध सण, उत्सव, मंडळ परवानग्या व विसर्जन मार्गांची अधिकृत यादी.
           </p>
         </div>
 
@@ -187,10 +187,10 @@ function FestivalPermissions() {
           <button
             className="secondary-btn"
             type="button"
-            onClick={() => toast.success("Exporting Excel file...")}
+            onClick={() => toast.success("एक्सेल फाईल डाउनलोड होत आहे...")}
           >
             <Download size={18} />
-            Export Excel
+            एक्सेल डाउनलोड
           </button>
 
           <button
@@ -199,7 +199,7 @@ function FestivalPermissions() {
             onClick={() => navigate("/add-festival-permission")}
           >
             <Plus size={18} />
-            Add Festival Permission
+            नवीन उत्सव परवानगी जोडा
           </button>
         </div>
       </div>
@@ -211,7 +211,7 @@ function FestivalPermissions() {
             name="searchText"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search festival, mandal, adhyaksha, phone..."
+            placeholder="सण, मंडळ, अध्यक्ष किंवा मोबाईल नंबरवरून शोधा..."
           />
         </div>
 
@@ -221,10 +221,10 @@ function FestivalPermissions() {
           onChange={(e) => setStatusFilter(e.target.value)}
           style={{ width: "160px", padding: "8px 12px", borderRadius: "8px", border: "1px solid #cbd5e1" }}
         >
-          <option value="all">All Statuses</option>
-          <option value="Approved">Approved</option>
-          <option value="Pending">Pending</option>
-          <option value="Rejected">Rejected</option>
+          <option value="all">सर्व परवानग्या (All)</option>
+          <option value="Approved">मंजूर (Approved)</option>
+          <option value="Pending">प्रलंबित (Pending)</option>
+          <option value="Rejected">नाकारले (Rejected)</option>
         </select>
       </div>
 
@@ -233,27 +233,27 @@ function FestivalPermissions() {
           <table className="professional-table">
             <thead>
               <tr>
-                <th>Photo</th>
-                <th>Festival & Mandal</th>
-                <th>Adhyaksha / President</th>
-                <th>Mobile</th>
-                <th>Procession</th>
-                <th>Sound</th>
-                <th>Crowd</th>
-                <th>Risk Level</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>फोटो</th>
+                <th>सण व मंडळाचे नाव</th>
+                <th>अध्यक्ष / आयोजक</th>
+                <th>मोबाईल नंबर</th>
+                <th>मिरवणूक</th>
+                <th>ध्वनिक्षेपक</th>
+                <th>गर्दी</th>
+                <th>धोका पातळी</th>
+                <th>स्थिती</th>
+                <th>कृती</th>
               </tr>
             </thead>
 
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="10">Loading festival permissions...</td>
+                  <td colSpan="10">डेटा लोड होत आहे...</td>
                 </tr>
               ) : filteredPermissions.length === 0 ? (
                 <tr>
-                  <td colSpan="10">No festival permissions found.</td>
+                  <td colSpan="10">कोणतीही उत्सव परवानगी नोंद आढळली नाही.</td>
                 </tr>
               ) : (
                 filteredPermissions.map((item) => {

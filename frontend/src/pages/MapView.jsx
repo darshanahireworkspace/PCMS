@@ -127,7 +127,15 @@ function MapView() {
         ]);
         toast.success("Current location found");
       },
-      () => toast.error("Location permission denied")
+      (err) => {
+        if (err.code === 1) {
+          toast.error("स्थान परवानगी नाकारली आहे. कृपया ब्राउझर सेटिंग्जमधून लोकेशन सुरू करा.");
+        } else if (err.code === 2) {
+          toast.error("GPS सिग्नल उपलब्ध नाही. कृपया डिव्हाइसचे लोकेशन सुरू करा.");
+        } else {
+          toast.error("लोकेशन मिळवण्यात अडचण आली.");
+        }
+      }
     );
   };
 

@@ -36,7 +36,7 @@ function MobileBottomNav() {
               <div className="add-menu-icon teal">
                 <Landmark size={18} />
               </div>
-              <span>Add Religious Place</span>
+              <span>धार्मिक स्थळ जोडा</span>
             </button>
 
             <button
@@ -46,7 +46,7 @@ function MobileBottomNav() {
               <div className="add-menu-icon purple">
                 <CalendarCheck size={18} />
               </div>
-              <span>Add Festival Permission</span>
+              <span>उत्सव परवानगी जोडा</span>
             </button>
 
             <button
@@ -56,7 +56,7 @@ function MobileBottomNav() {
               <div className="add-menu-icon blue">
                 <Store size={18} />
               </div>
-              <span>Add Other Place</span>
+              <span>इतर स्थळ जोडा</span>
             </button>
           </div>
         </div>
@@ -65,32 +65,32 @@ function MobileBottomNav() {
       <nav className="mobile-bottom-nav">
         <NavLink to="/dashboard" onClick={() => setShowAddMenu(false)}>
           <Home size={19} />
-          <span>Home</span>
+          <span>होम</span>
         </NavLink>
 
         <NavLink to="/map-view" onClick={() => setShowAddMenu(false)}>
           <Map size={19} />
-          <span>GIS Map</span>
+          <span>नकाशा</span>
         </NavLink>
 
         <button
           type="button"
           className={`bottom-add-btn ${showAddMenu ? "open" : ""}`}
           onClick={() => setShowAddMenu(!showAddMenu)}
-          aria-label="Add new record"
+          aria-label="नवीन जोडा"
         >
           {showAddMenu ? <X size={22} /> : <PlusCircle size={22} />}
-          <span>Add</span>
+          <span>नवीन +</span>
         </button>
 
         <NavLink to="/reports" onClick={() => setShowAddMenu(false)}>
           <FileText size={19} />
-          <span>Reports</span>
+          <span>अहवाल</span>
         </NavLink>
 
         <NavLink to="/settings" onClick={() => setShowAddMenu(false)}>
           <Settings size={19} />
-          <span>Settings</span>
+          <span>सेटिंग्ज</span>
         </NavLink>
       </nav>
     </>

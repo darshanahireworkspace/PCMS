@@ -1,0 +1,594 @@
+/* =========================================================
+   OFFICER LOGIN PAGE - MODERN LIGHT THEME (PCMS V2)
+   HIGH CONTRAST & CRISP TYPOGRAPHY
+   ========================================================= */
+
+.officer-login-wrapper {
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
+  padding: 24px 16px;
+  position: relative;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color-scheme: light;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Background Subtle Emblem Glow */
+.officer-login-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 12%, rgba(30, 64, 175, 0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Centered High-Contrast White Card */
+.officer-login-card {
+  width: 100%;
+  max-width: 440px;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.12), 0 6px 16px -2px rgba(15, 23, 42, 0.06);
+  padding: 32px 28px;
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+/* Card Top Navigation / Language Pill */
+.officer-login-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.official-gov-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: #1e293b;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.official-gov-pill .pulse-indicator {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #15803d;
+  box-shadow: 0 0 0 2.5px rgba(21, 128, 61, 0.25);
+}
+
+.login-lang-switch {
+  display: inline-flex;
+  align-items: center;
+  background: #f1f5f9;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 9999px;
+  padding: 2px;
+}
+
+.login-lang-btn {
+  background: transparent;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.login-lang-btn.active {
+  background: #1e3a8a;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3);
+}
+
+/* Police Logo & Header Section */
+.officer-login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.officer-logo-badge {
+  width: 90px;
+  height: 90px;
+  background: #ffffff;
+  border: 2.5px solid #1e3a8a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.14);
+  margin-bottom: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.officer-logo-badge:hover {
+  transform: scale(1.04);
+  box-shadow: 0 8px 22px rgba(30, 58, 138, 0.2);
+}
+
+.officer-logo-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.officer-subheading-pill {
+  display: inline-block;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.officer-title {
+  font-size: 21px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.35;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
+}
+
+.officer-tagline {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0;
+}
+
+/* Divider under header */
+.officer-header-divider {
+  width: 100%;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 16px 0 20px 0;
+}
+
+/* Form Styles */
+.officer-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.officer-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+}
+
+.officer-field-group label {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.officer-field-group label .required-star {
+  color: #dc2626;
+  font-weight: 800;
+}
+
+.officer-input-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.officer-field-icon {
+  position: absolute;
+  left: 14px;
+  color: #475569;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.officer-input-box input {
+  width: 100%;
+  height: 48px;
+  padding: 0 44px 0 44px;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 14.5px;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.officer-input-box input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 400;
+}
+
+.officer-input-box input:focus {
+  border-color: #1e40af;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 0 0 3.5px rgba(30, 64, 175, 0.15);
+}
+
+.officer-eye-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+
+.officer-eye-btn:hover {
+  color: #0f172a;
+}
+
+/* Primary Submit Button */
+.officer-submit-btn {
+  width: 100%;
+  height: 50px;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-top: 6px;
+  box-shadow: 0 4px 14px rgba(30, 58, 138, 0.28);
+  transition: all 0.2s ease;
+}
+
+.officer-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  box-shadow: 0 6px 18px rgba(30, 58, 138, 0.38);
+  transform: translateY(-1px);
+}
+
+.officer-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.officer-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* =========================================================
+   PWA INSTALL & UPDATE ACTION SECTION
+   ========================================================= */
+
+.officer-pwa-action-box {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Install Button */
+.pwa-install-trigger-btn {
+  width: 100%;
+  height: 48px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  color: #166534;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pwa-install-trigger-btn:hover {
+  background: #dcfce7;
+  border-color: #4ade80;
+  color: #14532d;
+  transform: translateY(-1px);
+}
+
+/* Update / Already Installed Button */
+.pwa-update-trigger-btn {
+  width: 100%;
+  height: 46px;
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: #1e293b;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pwa-update-trigger-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.pwa-update-trigger-btn:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
+.spin-icon {
+  animation: pwaSpin 1s linear infinite;
+}
+
+@keyframes pwaSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pwa-status-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+
+/* Footer & Security */
+.officer-login-footer {
+  margin-top: 20px;
+  text-align: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+}
+
+.officer-login-footer .security-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.officer-login-footer .copyright-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: #64748b;
+  margin: 0;
+}
+
+/* =========================================================
+   iOS SAFARI INSTALL INSTRUCTIONS MODAL
+   ========================================================= */
+
+.ios-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .ios-modal-overlay {
+    align-items: center;
+  }
+}
+
+.ios-modal-card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  padding: 24px 20px;
+  box-sizing: border-box;
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ios-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.ios-modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.ios-modal-close {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+}
+
+.ios-modal-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ios-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.ios-step-num {
+  width: 24px;
+  height: 24px;
+  background: #1e3a8a;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.ios-step-text {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.ios-step-text strong {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.ios-step-icon {
+  display: inline-block;
+  vertical-align: middle;
+  color: #1e40af;
+  margin: 0 2px;
+}
+
+.ios-modal-btn {
+  width: 100%;
+  height: 44px;
+  background: #1e3a8a;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ios-modal-btn:hover {
+  background: #1d4ed8;
+}
+
+/* =========================================================
+   MOBILE RESPONSIVENESS
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .officer-login-card {
+    padding: 24px 18px;
+    border-radius: 16px;
+  }
+
+  .officer-logo-badge {
+    width: 84px;
+    height: 84px;
+  }
+
+  .officer-title {
+    font-size: 19px;
+  }
+
+  .officer-input-box input {
+    height: 46px;
+    font-size: 14px;
+  }
+
+  .officer-submit-btn {
+    height: 48px;
+  }
+}

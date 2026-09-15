@@ -1105,13 +1105,17 @@
   gap: 16px;
 }
 
-.form-group {
+.admin-form .form-group,
+.admin-modal-body .form-group,
+.admin-portal-app .form-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.form-group label {
+.admin-form .form-group label,
+.admin-modal-body .form-group label,
+.admin-portal-app .form-group label {
   font-size: 12px;
   font-weight: 700;
   color: #cbd5e1;
@@ -1119,9 +1123,15 @@
   text-transform: uppercase;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.admin-form .form-group input,
+.admin-form .form-group select,
+.admin-form .form-group textarea,
+.admin-modal-body .form-group input,
+.admin-modal-body .form-group select,
+.admin-modal-body .form-group textarea,
+.admin-portal-app .form-group input,
+.admin-portal-app .form-group select,
+.admin-portal-app .form-group textarea {
   width: 100%;
   height: 44px;
   background: rgba(30, 41, 59, 0.8);
@@ -1134,14 +1144,22 @@
   box-sizing: border-box;
 }
 
-.form-group textarea {
+.admin-form .form-group textarea,
+.admin-modal-body .form-group textarea,
+.admin-portal-app .form-group textarea {
   height: 80px;
   padding: 10px 14px;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.admin-form .form-group input:focus,
+.admin-form .form-group select:focus,
+.admin-form .form-group textarea:focus,
+.admin-modal-body .form-group input:focus,
+.admin-modal-body .form-group select:focus,
+.admin-modal-body .form-group textarea:focus,
+.admin-portal-app .form-group input:focus,
+.admin-portal-app .form-group select:focus,
+.admin-portal-app .form-group textarea:focus {
   border-color: #38bdf8;
   box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
 }

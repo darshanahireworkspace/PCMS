@@ -51,6 +51,20 @@ export function usePermissions() {
 
   useEffect(() => {
     checkPermissions();
+
+    const handleResume = () => {
+      if (document.visibilityState === "visible") {
+        checkPermissions();
+      }
+    };
+
+    window.addEventListener("focus", handleResume);
+    document.addEventListener("visibilitychange", handleResume);
+
+    return () => {
+      window.removeEventListener("focus", handleResume);
+      document.removeEventListener("visibilitychange", handleResume);
+    };
   }, [checkPermissions]);
 
   // Request Location Access

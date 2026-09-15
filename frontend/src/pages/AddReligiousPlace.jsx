@@ -188,8 +188,16 @@ function AddReligiousPlace() {
         toast.success("GPS Location detected");
         setLocationLoading(false);
       },
-      () => {
-        toast.error("Please enable location permission");
+      (err) => {
+        if (err.code === 1) {
+          toast.error("स्थान परवानगी नाकारली आहे. कृपया ब्राउझर सेटिंग्जमधून लोकेशन सुरू करा.");
+        } else if (err.code === 2) {
+          toast.error("GPS सिग्नल उपलब्ध नाही. कृपया डिव्हाइसचे लोकेशन सुरू करा.");
+        } else if (err.code === 3) {
+          toast.error("लोकेशन शोधण्यात वेळ लागला. कृपया पुन्हा प्रयत्न करा.");
+        } else {
+          toast.error("लोकेशन मिळवण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा.");
+        }
         setLocationLoading(false);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -339,10 +347,10 @@ function AddReligiousPlace() {
       <div className="page-header">
         <div>
           <h2 className="page-title">
-            {isEditMode ? "Edit Religious Place" : "Add Religious Place"}
+            {isEditMode ? "धार्मिक स्थळ संपादित करा" : "नवीन धार्मिक स्थळ जोडा"}
           </h2>
           <p className="page-subtitle">
-            Register permanent religious places with live GPS coordinates, security data and contact details.
+            शहरातील मंदिरे, मशिदी, दर्गा व इतर धार्मिक स्थळांची अचूक माहिती, संपर्क व्यक्ती, जीपीएस (GPS) स्थान व सुरक्षा तपशील नोंदवा.
           </p>
         </div>
 
@@ -353,7 +361,7 @@ function AddReligiousPlace() {
           disabled={locationLoading}
         >
           <Navigation size={18} />
-          {locationLoading ? "Detecting..." : "Detect Current Location"}
+          {locationLoading ? "स्थान शोधत आहे..." : "सध्याचे स्थान मिळवा (GPS)"}
         </button>
       </div>
 
@@ -361,9 +369,9 @@ function AddReligiousPlace() {
         <div className="selected-location-box">
           <MapPin size={20} />
           <div>
-            <h4>GPS Coordinates Verified</h4>
+            <h4>जीपीएस स्थान निश्चित झाले (GPS Verified)</h4>
             <p>
-              Latitude: {form.latitude} • Longitude: {form.longitude}
+              अक्षांश (Latitude): {form.latitude} • रेखांश (Longitude): {form.longitude}
             </p>
           </div>
         </div>
@@ -375,127 +383,127 @@ function AddReligiousPlace() {
           <div className="section-title">
             <Building2 size={20} />
             <div>
-              <h3>SECTION 1 — BASIC INFORMATION</h3>
-              <p>Primary place identification, religion, type and address</p>
+              <h3>विभाग १ — प्राथमिक माहिती (Basic Details)</h3>
+              <p>धार्मिक स्थळाचे नाव, धर्म, प्रकार व पूर्ण पत्ता</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label>Religious Place Name *</label>
+              <label>धार्मिक स्थळाचे नाव *</label>
               <input
                 type="text"
                 name="place_name"
                 value={form.place_name}
                 onChange={handleChange}
-                placeholder="Enter temple / masjid / dargah name"
+                placeholder="उदा. श्री सिद्धिविनायक मंदिर / जामा मशीद / दर्गा"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Religion *</label>
+              <label>धर्म *</label>
               <select name="religion" value={form.religion} onChange={handleChange}>
-                <option value="Hindu">Hindu</option>
-                <option value="Muslim">Muslim</option>
-                <option value="Christian">Christian</option>
-                <option value="Sikh">Sikh</option>
-                <option value="Jain">Jain</option>
-                <option value="Buddhist">Buddhist</option>
-                <option value="Other">Other</option>
+                <option value="Hindu">हिंदू (Hindu)</option>
+                <option value="Muslim">मुस्लिम (Muslim)</option>
+                <option value="Christian">ख्रिश्चन (Christian)</option>
+                <option value="Sikh">शीख (Sikh)</option>
+                <option value="Jain">जैन (Jain)</option>
+                <option value="Buddhist">बौद्ध (Buddhist)</option>
+                <option value="Other">इतर (Other)</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label>Place Type *</label>
+              <label>स्थळाचा प्रकार *</label>
               <select name="place_type" value={form.place_type} onChange={handleChange}>
-                <option value="Temple">Temple / Mandir</option>
-                <option value="Masjid">Masjid / Mosque</option>
-                <option value="Dargah">Dargah</option>
-                <option value="Gurudwara">Gurudwara</option>
-                <option value="Church">Church</option>
-                <option value="Math">Math</option>
-                <option value="Ashram">Ashram</option>
-                <option value="Other">Other</option>
+                <option value="Temple">मंदिर (Temple / Mandir)</option>
+                <option value="Masjid">मशीद (Masjid / Mosque)</option>
+                <option value="Dargah">दर्गा (Dargah / Peer)</option>
+                <option value="Gurudwara">गुरुद्वारा (Gurudwara)</option>
+                <option value="Church">चर्च (Church)</option>
+                <option value="Math">मठ (Math)</option>
+                <option value="Ashram">आश्रम (Ashram)</option>
+                <option value="Other">इतर (Other)</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label>Area / Ward *</label>
+              <label>परिसर / प्रभाग *</label>
               <input
                 type="text"
                 name="area"
                 value={form.area}
                 onChange={handleChange}
-                placeholder="Enter area or ward name"
+                placeholder="उदा. छावणी, कॅम्प, जुना बाजार, प्रभाग क्र."
                 required
               />
             </div>
 
             <div className="form-group full-width">
-              <label>Full Address *</label>
+              <label>पूर्ण पत्ता *</label>
               <textarea
                 name="address"
                 rows={2}
                 value={form.address}
                 onChange={handleChange}
-                placeholder="Street address details..."
+                placeholder="गल्ली, रस्त्याचे नाव, परिसराचा सविस्तर पत्ता..."
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Landmark / Ward Details</label>
+              <label>जवळची खूण / लँडमार्क</label>
               <input
                 type="text"
                 name="ward"
                 value={form.ward}
                 onChange={handleChange}
-                placeholder="Nearby landmark or ward number"
+                placeholder="उदा. मुख्य चौकाजवळ, सरकारी दवाखान्यासमोर"
               />
             </div>
 
             <div className="form-group">
-              <label>Pincode</label>
+              <label>पिनकोड</label>
               <input
                 type="text"
                 name="pincode"
                 value={form.pincode}
                 onChange={handleChange}
-                placeholder="423203"
+                placeholder="४२३२०३"
               />
             </div>
 
             <div className="form-group">
-              <label>Taluka / City</label>
+              <label>तालुका / शहर</label>
               <input
                 type="text"
                 name="taluka"
                 value={form.taluka}
                 onChange={handleChange}
-                placeholder="Malegaon"
+                placeholder="मालेगाव"
               />
             </div>
 
             <div className="form-group">
-              <label>District</label>
+              <label>जिल्हा</label>
               <input
                 type="text"
                 name="district"
                 value={form.district}
                 onChange={handleChange}
-                placeholder="Nashik"
+                placeholder="नाशिक"
               />
             </div>
 
             <div className="form-group">
-              <label>Assigned Police Station</label>
+              <label>संबंधित पोलीस ठाणे *</label>
               <select
                 name="police_station"
                 value={form.police_station}
                 onChange={handleChange}
               >
-                <option value="">Select Police Station</option>
+                <option value="">पोलीस ठाणे निवडा</option>
                 {policeStations.map((station) => (
                   <option key={station.id} value={station.station_name}>
                     {station.station_name}
@@ -511,54 +519,54 @@ function AddReligiousPlace() {
           <div className="section-title">
             <Users size={20} />
             <div>
-              <h3>SECTION 2 — RESPONSIBLE PERSON / CONTACT</h3>
-              <p>Trust, committee management and contact details</p>
+              <h3>विभाग २ — विश्वस्त / जबाबदार व्यक्ती व संपर्क तपशील</h3>
+              <p>ट्रस्ट, कमिटी, मंडळ व मुख्य पदाधिकाऱ्यांची माहिती</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label>Trust / Organization Name</label>
+              <label>ट्रस्ट / मंडळाचे नाव</label>
               <input
                 type="text"
                 name="president_name"
                 value={form.president_name}
                 onChange={handleChange}
-                placeholder="Enter trust / committee name"
+                placeholder="उदा. श्री गणेश मंदिर ट्रस्ट / मशीद कमिटी"
               />
             </div>
 
             <div className="form-group">
-              <label>Trustee / Responsible Person Name</label>
+              <label>मुख्य विश्वस्त / जबाबदार व्यक्तीचे नाव</label>
               <input
                 type="text"
                 name="contact_person"
                 value={form.contact_person}
                 onChange={handleChange}
-                placeholder="Primary responsible person"
+                placeholder="अध्यक्ष / मुख्य व्यवस्थापकाचे नाव"
               />
             </div>
 
             <div className="form-group">
-              <label>Primary Contact Number *</label>
+              <label>मुख्य मोबाईल नंबर *</label>
               <input
                 type="tel"
                 name="contact_mobile"
                 value={form.contact_mobile}
                 onChange={handleChange}
-                placeholder="10-digit mobile number"
+                placeholder="१० अंकी मोबाईल नंबर"
                 required
               />
             </div>
 
             <div className="form-group">
-              <label>Alternate Contact Number</label>
+              <label>पर्यायी मोबाईल नंबर / सचिव</label>
               <input
                 type="tel"
                 name="secretary_name"
                 value={form.secretary_name}
                 onChange={handleChange}
-                placeholder="Alternate phone number"
+                placeholder="दुसरा संपर्क क्रमांक किंवा सचिवाची माहिती"
               />
             </div>
           </div>
@@ -569,31 +577,31 @@ function AddReligiousPlace() {
           <div className="section-title">
             <MapPin size={20} />
             <div>
-              <h3>SECTION 3 — LOCATION DETAILS</h3>
-              <p>GPS coordinates for GIS map positioning</p>
+              <h3>विभाग ३ — जीपीएस (GPS) स्थान तपशील</h3>
+              <p>नकाशावर (GIS Map) अचूक स्थान दाखवण्यासाठी अक्षांश व रेखांश</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label>Latitude</label>
+              <label>अक्षांश (Latitude)</label>
               <input
                 type="text"
                 name="latitude"
                 value={form.latitude}
                 onChange={handleChange}
-                placeholder="e.g. 20.5579"
+                placeholder="उदा. 20.5579"
               />
             </div>
 
             <div className="form-group">
-              <label>Longitude</label>
+              <label>रेखांश (Longitude)</label>
               <input
                 type="text"
                 name="longitude"
                 value={form.longitude}
                 onChange={handleChange}
-                placeholder="e.g. 74.5287"
+                placeholder="उदा. 74.5287"
               />
             </div>
           </div>
@@ -604,50 +612,50 @@ function AddReligiousPlace() {
           <div className="section-title">
             <ShieldAlert size={20} />
             <div>
-              <h3>SECTION 4 — SECURITY & CCTV DETAILS</h3>
-              <p>CCTV surveillance cameras, crowd density and security level</p>
+              <h3>विभाग ४ — सुरक्षा व सीसीटीव्ही (CCTV) तपशील</h3>
+              <p>सुरक्षा कॅमेरे, गर्दीचे प्रमाण व संवेदनशीलता पातळी</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group">
-              <label>Risk Level</label>
+              <label>धोका पातळी / संवेदनशीलता</label>
               <select name="risk_level" value={form.risk_level} onChange={handleChange}>
-                <option value="Low">Low Risk</option>
-                <option value="Medium">Medium Risk</option>
-                <option value="High">High Risk</option>
+                <option value="Low">सामान्य / कमी धोका (Low Risk)</option>
+                <option value="Medium">मध्यम संवेदनशीलता (Medium Risk)</option>
+                <option value="High">अतिसंवेदनशील / उच्च धोका (High Risk)</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label>Regular Crowd Density</label>
+              <label>नियमित गर्दीचे प्रमाण</label>
               <select name="regular_crowd" value={form.regular_crowd} onChange={handleChange}>
-                <option value="Low">Low (0 - 100)</option>
-                <option value="Medium">Medium (100 - 500)</option>
-                <option value="High">High (500+)</option>
+                <option value="Low">कमी (० ते १०० भाविक)</option>
+                <option value="Medium">मध्यम (१०० ते ५०० भाविक)</option>
+                <option value="High">जास्त (५०० पेक्षा जास्त भाविक)</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label>CCTV Available?</label>
+              <label>सीसीटीव्ही (CCTV) कॅमेरे आहेत का?</label>
               <select
                 value={cctvAvailable}
                 onChange={(e) => setCctvAvailable(e.target.value)}
               >
-                <option value="No">No</option>
-                <option value="Yes">Yes</option>
+                <option value="No">नाही (No)</option>
+                <option value="Yes">होय (Yes)</option>
               </select>
             </div>
 
             {cctvAvailable === "Yes" && (
               <div className="form-group">
-                <label>Number of CCTV Cameras</label>
+                <label>सीसीटीव्ही कॅमेऱ्यांची संख्या</label>
                 <input
                   type="number"
                   name="cctv_count"
                   value={form.cctv_count}
                   onChange={handleChange}
-                  placeholder="e.g. 4"
+                  placeholder="उदा. ४"
                 />
               </div>
             )}
@@ -659,20 +667,20 @@ function AddReligiousPlace() {
           <div className="section-title">
             <ShieldAlert size={20} />
             <div>
-              <h3>SECTION 5 — RISK / ADDITIONAL INFORMATION</h3>
-              <p>Sensitive police observations, remarks and advisories</p>
+              <h3>विभाग ५ — पोलीस शेरा व गोपनीय माहिती</h3>
+              <p>संवेदनशील नोंदी, पूर्वीचे वाद किंवा पोलिसांच्या विशेष सूचना</p>
             </div>
           </div>
 
           <div className="form-grid">
             <div className="form-group full-width">
-              <label>Police Notes & Remarks</label>
+              <label>पोलीस नोंदी / गोपनीय शेरा</label>
               <textarea
                 name="sensitive_notes"
                 rows={3}
                 value={form.sensitive_notes}
                 onChange={handleChange}
-                placeholder="Police security notes, remarks or advisories..."
+                placeholder="धार्मिक स्थळाबाबत विशेष माहिती, कायदा व सुव्यवस्था संदर्भातील सूचना लिहा..."
               />
             </div>
           </div>
@@ -683,8 +691,8 @@ function AddReligiousPlace() {
           <div className="section-title">
             <Camera size={20} />
             <div>
-              <h3>SECTION 6 — PHOTO / DOCUMENTATION</h3>
-              <p>Upload a clear photo of the place building or entrance</p>
+              <h3>विभाग ६ — स्थळाचा फोटो (Photo Upload)</h3>
+              <p>धार्मिक स्थळाच्या मुख्य इमारतीचा किंवा प्रवेशद्वाराचा स्पष्ट फोटो जोडा</p>
             </div>
           </div>
 
@@ -693,8 +701,8 @@ function AddReligiousPlace() {
               <div className="photo-upload-options-row">
                 <label className="upload-box camera-option-box">
                   <Camera size={30} className="upload-icon-teal" />
-                  <h4>Take Photo</h4>
-                  <p>Capture using device camera</p>
+                  <h4>कॅमेऱ्याने फोटो काढा</h4>
+                  <p>मोबाईल कॅमेरा उघडा</p>
                   <input
                     type="file"
                     accept="image/*"
@@ -706,8 +714,8 @@ function AddReligiousPlace() {
 
                 <label className="upload-box gallery-option-box">
                   <Upload size={30} className="upload-icon-blue" />
-                  <h4>Choose from Gallery</h4>
-                  <p>JPG, PNG or WEBP (Max 5MB)</p>
+                  <h4>गॅलरीतून फोटो निवडा</h4>
+                  <p>JPG, PNG किंवा WEBP (कमाल 5MB)</p>
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
@@ -722,7 +730,7 @@ function AddReligiousPlace() {
                 <div className="photo-preview-actions">
                   <label className="photo-change-btn">
                     <RefreshCw size={15} />
-                    <span>Change Photo</span>
+                    <span>फोटो बदला</span>
                     <input
                       type="file"
                       accept="image/jpeg,image/png,image/webp"
@@ -737,7 +745,7 @@ function AddReligiousPlace() {
                     onClick={removePhoto}
                   >
                     <Trash2 size={15} />
-                    <span>Remove</span>
+                    <span>काढून टाका</span>
                   </button>
                 </div>
               </div>
@@ -752,16 +760,16 @@ function AddReligiousPlace() {
             className="cancel-btn"
             onClick={() => navigate("/religious-places")}
           >
-            Cancel
+            रद्द करा (Cancel)
           </button>
 
           <button type="submit" className="primary-btn" disabled={loading}>
             <Save size={18} />
             {loading
-              ? "Saving Record..."
+              ? "माहिती सेव्ह होत आहे..."
               : isEditMode
-              ? "Update Religious Place"
-              : "Save Religious Place"}
+              ? "माहिती अपडेट करा"
+              : "धार्मिक स्थळ सेव्ह करा"}
           </button>
         </div>
       </form>
@@ -773,13 +781,13 @@ function AddReligiousPlace() {
             <div className="modal-header bg-amber-light">
               <div className="flex-items-center gap-2">
                 <ShieldAlert size={22} className="text-amber" />
-                <h3 className="text-amber">Already Registered Location</h3>
+                <h3 className="text-amber">या ठिकाणी आधीच नोंदणी अस्तित्वात आहे</h3>
               </div>
             </div>
 
             <div className="p-4">
               <p className="mb-3">
-                A master religious place record already exists at or near this location:
+                या स्थानावर किंवा जवळ आधीच मुख्य धार्मिक स्थळाची नोंद झालेली आहे:
               </p>
 
               <div className="duplicate-details-card">
@@ -793,11 +801,11 @@ function AddReligiousPlace() {
 
                 <div className="duplicate-info">
                   <h4>{duplicateModalData.place_name}</h4>
-                  <p className="text-muted">{duplicateModalData.place_type} • {duplicateModalData.address || duplicateModalData.area || "Chhavani"}</p>
+                  <p className="text-muted">{duplicateModalData.place_type} • {duplicateModalData.address || duplicateModalData.area || "मालेगाव"}</p>
                   <p className="small mt-2">
-                    <b>Registered By:</b> {duplicateModalData.creator_name || "Police Officer"}
+                    <b>नोंदणी अधिकारी:</b> {duplicateModalData.creator_name || "पोलीस अधिकारी"}
                     <br />
-                    <b>Total Visits:</b> {duplicateModalData.visit_count || 1}
+                    <b>एकूण भेटी (Visits):</b> {duplicateModalData.visit_count || 1}
                   </p>
                 </div>
               </div>
@@ -811,14 +819,14 @@ function AddReligiousPlace() {
                     navigate("/religious-places");
                   }}
                 >
-                  [ View Existing Record ]
+                  अस्तित्वातील रेकॉर्ड पहा
                 </button>
                 <button
                   type="button"
                   className="primary-btn"
                   onClick={() => setShowVisitModal(true)}
                 >
-                  [ Add Verification / Visit ]
+                  नवीन भेट / पडताळणी जोडा
                 </button>
               </div>
             </div>
@@ -831,21 +839,21 @@ function AddReligiousPlace() {
         <div className="modal-overlay">
           <div className="admin-modal-card compact">
             <div className="modal-header">
-              <h3>Record Verification / Visit</h3>
+              <h3>भेट व पडताळणी नोंदवा (Verification Visit)</h3>
             </div>
 
             <form onSubmit={handleRecordVisitSubmit} className="admin-form p-4">
               <p className="text-muted mb-3">
-                Recording secondary officer visit for <b>{duplicateModalData.place_name}</b>:
+                <b>{duplicateModalData.place_name}</b> या स्थळाची पोलीस पडताळणी भेट नोंदवत आहात:
               </p>
 
               <div className="form-group">
-                <label>Visit Notes / Observations</label>
+                <label>पडताळणी शेरा व निरीक्षणे</label>
                 <textarea
                   rows="3"
                   value={visitNotes}
                   onChange={(e) => setVisitNotes(e.target.value)}
-                  placeholder="Enter visit verification notes..."
+                  placeholder="पडताळणी शेरा, सुरक्षा स्थिती, उपस्थित व्यक्ती इत्यादी माहिती लिहा..."
                   required
                 ></textarea>
               </div>
@@ -859,10 +867,10 @@ function AddReligiousPlace() {
                     setDuplicateModalData(null);
                   }}
                 >
-                  Cancel
+                  रद्द करा
                 </button>
                 <button type="submit" className="primary-btn" disabled={savingVisit}>
-                  {savingVisit ? "Recording Visit..." : "Submit Verification Visit"}
+                  {savingVisit ? "नोंदवत आहे..." : "पडताळणी भेट सेव्ह करा"}
                 </button>
               </div>
             </form>
