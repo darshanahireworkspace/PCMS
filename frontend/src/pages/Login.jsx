@@ -78,23 +78,38 @@ function Login() {
 
     setIsInstalled(installed);
 
+    // Read global prompt if already captured before React mounted
+    if (window.deferredPrompt) {
+      setDeferredPrompt(window.deferredPrompt);
+    }
+
     // Capture PWA install prompt event on Android/Chrome
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault();
+      window.deferredPrompt = e;
       setDeferredPrompt(e);
+    };
+
+    const handlePromptReady = () => {
+      if (window.deferredPrompt) {
+        setDeferredPrompt(window.deferredPrompt);
+      }
     };
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
+      window.deferredPrompt = null;
       toast.success("पोलीस ॲप यशस्वीरीत्या इन्स्टॉल झाले!");
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("pwa-prompt-ready", handlePromptReady);
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.removeEventListener("pwa-prompt-ready", handlePromptReady);
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
   }, []);
@@ -111,21 +126,30 @@ function Login() {
       return;
     }
 
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice.outcome === "accepted") {
-        toast.success("ॲप इन्स्टॉल प्रक्रिया सुरू झाली आहे!");
-        setDeferredPrompt(null);
-        setIsInstalled(true);
+    const promptEvent = deferredPrompt || window.deferredPrompt;
+
+    if (promptEvent) {
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (choice && choice.outcome === "accepted") {
+          toast.success("ॲप इन्स्टॉल प्रक्रिया सुरू झाली आहे!");
+          setDeferredPrompt(null);
+          window.deferredPrompt = null;
+          setIsInstalled(true);
+        } else {
+          toast("इन्स्टॉलेशन रद्द केले गेले.");
+        }
+        return;
+      } catch (err) {
+        console.warn("Direct install notice:", err);
       }
-      return;
     }
 
     // Fallback if browser prompt event hasn't fired yet
     toast("ॲप इन्स्टॉल करण्यासाठी ब्राउझर मेनू (⋮) वरून 'Install app' किंवा 'Add to Home screen' निवडा.", {
       icon: "📲",
-      duration: 5000,
+      duration: 6000,
     });
   };
 
